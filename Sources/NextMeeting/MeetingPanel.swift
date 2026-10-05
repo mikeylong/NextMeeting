@@ -353,7 +353,7 @@ struct MeetingPanel: View {
                         }
                     }.padding(14).frame(maxWidth: .infinity, alignment: .leading)
                         .background(PanelStyle.card, in: RoundedRectangle(cornerRadius: 15))
-                    attendeesSection(meeting.attendees).padding(.top, 16).padding(.bottom, 16)
+                    attendeesSection(AttendeeLogic.alphabeticallySorted(meeting.attendees)).padding(.top, 16).padding(.bottom, 16)
                 }
             }.frame(maxHeight: .infinity)
             if let url = meeting.joinURL {

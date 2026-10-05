@@ -1,10 +1,10 @@
-# Next Meeting 1.0.2
+# Next Meeting 1.0.3
 
-**Join meeting** now opens supported Zoom, Microsoft Teams, and Webex invitations directly in the matching installed app from both the agenda and meeting details.
+Attendees now appear alphabetically by their displayed names, including the organizer. Sorting follows the Mac’s locale and ignores letter case. Attendees with equivalent names keep their existing order.
 
-If the app is unavailable or the native open request fails, Next Meeting opens the complete original invitation in your default browser. Google Meet uses the browser. Zoom personal-room names and host-start invitations also use the browser because the native join format cannot preserve their meaning.
+Organizer, You, optional-attendee, and response labels are preserved.
 
-Calendar selections, preferences, and calendar access carry over from the previous version. The design, calendar sync, attendees, and Apple Calendar event selection stay the same.
+Calendar selections, preferences, and calendar access carry over from the previous version. Meeting app routing, the design, calendar sync, and Apple Calendar event selection stay the same.
 
 Requires an Apple silicon Mac running macOS 14 or later. The download includes the app and a SHA-256 checksum.
 
