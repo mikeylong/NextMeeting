@@ -1,8 +1,10 @@
-# Next Meeting 1.0.1
+# Next Meeting 1.0.2
 
-The app is now named **Next Meeting**. The agenda opens with the countdown, followed by the meeting title and details. The smaller “Next meeting” label and its adjacent start time have been removed.
+**Join meeting** now opens supported Zoom, Microsoft Teams, and Webex invitations directly in the matching installed app from both the agenda and meeting details.
 
-Calendar selections and calendar access carry over from the previous version.
+If the app is unavailable or the native open request fails, Next Meeting opens the complete original invitation in your default browser. Google Meet uses the browser. Zoom personal-room names and host-start invitations also use the browser because the native join format cannot preserve their meaning.
+
+Calendar selections, preferences, and calendar access carry over from the previous version. The design, calendar sync, attendees, and Apple Calendar event selection stay the same.
 
 Requires an Apple silicon Mac running macOS 14 or later. The download includes the app and a SHA-256 checksum.
 

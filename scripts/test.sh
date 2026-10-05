@@ -24,3 +24,12 @@ xcrun swiftc -parse-as-library -swift-version 6 \
     "$PROJECT_DIR/Tests/CalendarEventLinkTests.swift" \
     -o "$BUILD_DIR/CalendarEventLinkTests"
 "$BUILD_DIR/CalendarEventLinkTests"
+
+xcrun swiftc -parse-as-library -swift-version 6 \
+    -module-cache-path "$BUILD_DIR/module-cache" \
+    -target "$ARCH-apple-macosx14.0" -sdk "$SDK_PATH" \
+    "$PROJECT_DIR/Sources/NextMeeting/Meeting.swift" \
+    "$PROJECT_DIR/Sources/NextMeeting/MeetingLink.swift" \
+    "$PROJECT_DIR/Tests/MeetingLinkTests.swift" \
+    -o "$BUILD_DIR/MeetingLinkTests"
+"$BUILD_DIR/MeetingLinkTests"

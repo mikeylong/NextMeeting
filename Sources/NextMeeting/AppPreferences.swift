@@ -79,6 +79,11 @@ final class AppPreferences: ObservableObject {
 }
 
 enum AppActions {
+    @MainActor
+    static func joinMeeting(_ url: URL) async -> MeetingOpenResult {
+        await MeetingLinkRouter.open(url, using: WorkspaceMeetingLinkOpener())
+    }
+
     static func openCalendar() {
         NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Calendar.app"))
     }
