@@ -261,7 +261,18 @@ private actor CalendarReader {
     }
 
     func requestAccess() async throws -> Bool {
-        try await store.requestFullAccessToEvents()
+        // Keep EKEventStore inside this actor when building with SDKs whose
+        // imported async overload is nonisolated. The completion captures only
+        // the continuation, preserving EventKit's granted value and error.
+        try await withCheckedThrowingContinuation { continuation in
+            store.requestFullAccessToEvents(completion: { granted, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: granted)
+                }
+            })
+        }
     }
 
     func snapshot(now: Date) -> Snapshot {
