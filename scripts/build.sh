@@ -29,6 +29,7 @@ xcrun swiftc -O -whole-module-optimization -parse-as-library -swift-version 6 \
 
 cp "$PROJECT_DIR/Resources/Info.plist" "$APP_DIR/Contents/Info.plist"
 cp "$PROJECT_DIR/Resources/AppIcon.icns" "$APP_DIR/Contents/Resources/AppIcon.icns"
+cp "$PROJECT_DIR/LICENSE" "$APP_DIR/Contents/Resources/LICENSE"
 printf 'APPL????' > "$APP_DIR/Contents/PkgInfo"
 plutil -lint "$APP_DIR/Contents/Info.plist" "$PROJECT_DIR/Resources/NextMeeting.entitlements"
 

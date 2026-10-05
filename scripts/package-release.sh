@@ -17,6 +17,8 @@ APP_DIR="$(cd "$APP_DIR" && pwd)"
 INFO_PLIST="$APP_DIR/Contents/Info.plist"
 EXECUTABLE="$APP_DIR/Contents/MacOS/NextMeeting"
 [[ -f "$INFO_PLIST" && -x "$EXECUTABLE" ]] || fail "The app bundle is incomplete."
+[[ -f "$APP_DIR/Contents/Resources/LICENSE" ]] || fail "The app bundle is missing the MIT license notice."
+cmp -s "$PROJECT_DIR/LICENSE" "$APP_DIR/Contents/Resources/LICENSE" || fail "The app's license notice does not match this source checkout."
 
 plist_value() { /usr/libexec/PlistBuddy -c "Print :$1" "$INFO_PLIST" 2>/dev/null; }
 VERSION="$(plist_value CFBundleShortVersionString)"
@@ -48,7 +50,7 @@ fi
 while IFS= read -r -d '' file; do
     relative="${file#"$APP_DIR/"}"
     case "$relative" in
-        Contents/Info.plist|Contents/PkgInfo|Contents/MacOS/NextMeeting|Contents/Resources/AppIcon.icns|Contents/_CodeSignature/CodeResources) ;;
+        Contents/Info.plist|Contents/PkgInfo|Contents/MacOS/NextMeeting|Contents/Resources/AppIcon.icns|Contents/Resources/LICENSE|Contents/_CodeSignature/CodeResources) ;;
         *) fail "Unexpected file in the app bundle: $relative" ;;
     esac
 done < <(find "$APP_DIR" -type f -print0)

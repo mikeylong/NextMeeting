@@ -34,41 +34,21 @@ Meeting labels show the account name followed by the calendar name, such as **Ex
 
 Next Meeting reads events locally, never edits them, and has no account, analytics, or server. macOS requires EventKit’s full calendar-access permission to read event details; the app does not use its write capability.
 
-## Build and verify
+## Build and contribute
 
-Requires macOS 14 or later and the Xcode command line tools. The build targets the current Mac’s architecture and has no external dependencies.
+Building requires macOS and Xcode command line tools with Swift 6. The app targets macOS 14 or later. The build uses the current Mac’s architecture and has no external dependencies.
 
 ```sh
-cd /Users/mike/NextMeeting
+git clone https://github.com/mikeylong/NextMeeting.git
+cd NextMeeting
 ./scripts/build.sh
 ./scripts/test.sh
 ```
 
-After launching the app and connecting calendars, check its local connection summary:
-
-```sh
-"build/Next Meeting.app/Contents/MacOS/NextMeeting" --verify-calendars
-```
-
-The summary contains permission status, counts, and the last verification time. It reads the app’s saved summary because macOS attributes calendar access differently to an app launched from the menu bar and a command launched from a terminal. Exit code 0 means the app refreshed successfully within the last three minutes. No event details are printed.
-
-The build produces `build/Next Meeting.app` with a local ad hoc signature and calendar sandbox entitlement. A distributable release would need Developer ID signing and notarization.
-
-`scripts/test.sh` checks meeting ordering, rolling-window boundaries, ongoing events, recurrence identities, calendar selection, countdowns, conference URL extraction, attendee status mapping and identity handling, Calendar event links, native meeting app selection, and browser fallback without reading personal calendars or opening meetings. The [meeting app routing notes](docs/meeting-app-routing.md) describe the native formats and verification limits.
-
-For UI review with isolated sample calendars:
-
-```sh
-"build/Next Meeting.app/Contents/MacOS/NextMeeting" --preview
-"build/Next Meeting.app/Contents/MacOS/NextMeeting" --preview --preview-empty
-"build/Next Meeting.app/Contents/MacOS/NextMeeting" --preview --preview-denied
-"build/Next Meeting.app/Contents/MacOS/NextMeeting" --preview --light
-```
-
-Preview mode is labeled and never reads real events or opens sample meeting links. The normal app starts without preview mode.
-
-For local UI diagnostics, `--inspect` displays the app in a standard window with live calendar data instead of samples. Launch through the app bundle when verifying calendar permission. This mode is off in the normal build.
-
-`./scripts/build-preview.sh agenda` creates a separate sample app for UI inspection. Use `empty`, `denied`, or `light` for the other states. Use `popover` and click **Open sample popover** to inspect the native arrow and panel surface together. `./scripts/render-preview.sh` saves dark and light sample images in `Design` without capturing the screen or reading personal calendars.
+The build creates `build/Next Meeting.app` with a local ad hoc signature. See [CONTRIBUTING.md](CONTRIBUTING.md) for sample previews, calendar diagnostics, and pull request checks. The [meeting app routing notes](docs/meeting-app-routing.md) describe the native formats and verification limits.
 
 Apple’s [EventKit access documentation](https://developer.apple.com/documentation/eventkit/accessing-the-event-store) describes the calendar permission and sandbox requirements.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
