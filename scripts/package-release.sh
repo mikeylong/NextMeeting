@@ -4,15 +4,15 @@ set -euo pipefail
 # Package the app that has already passed validation. This script never rebuilds
 # or re-signs it, so release bytes stay tied to the reviewed application bundle.
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-APP_DIR="${1:-$PROJECT_DIR/build/NextMeeting.app}"
+APP_DIR="${1:-$PROJECT_DIR/build/Next Meeting.app}"
 RELEASE_DIR="$PROJECT_DIR/build/releases"
 ARCH="arm64"
 CHECKSUM_NAME="SHA256SUMS"
 
 fail() { echo "Release packaging failed: $*" >&2; exit 1; }
-[[ $# -le 1 ]] || fail "Usage: scripts/package-release.sh [path-to/NextMeeting.app]"
+[[ $# -le 1 ]] || fail "Usage: scripts/package-release.sh [path-to/Next Meeting.app]"
 [[ -d "$APP_DIR" && ! -L "$APP_DIR" ]] || fail "Application bundle not found: $APP_DIR"
-[[ "$(basename "$APP_DIR")" == "NextMeeting.app" ]] || fail "Use the canonical NextMeeting.app bundle."
+[[ "$(basename "$APP_DIR")" == "Next Meeting.app" ]] || fail "Use the canonical Next Meeting.app bundle."
 APP_DIR="$(cd "$APP_DIR" && pwd)"
 INFO_PLIST="$APP_DIR/Contents/Info.plist"
 EXECUTABLE="$APP_DIR/Contents/MacOS/NextMeeting"
@@ -24,7 +24,9 @@ VERSION="$(plist_value CFBundleShortVersionString)"
 ASSET_NAME="NextMeeting-$VERSION-macos-$ARCH.zip"
 [[ "$(plist_value CFBundleIdentifier)" == "systems.surfaces.NextMeeting" ]] || fail "Unexpected bundle identifier."
 [[ "$(plist_value CFBundleExecutable)" == "NextMeeting" ]] || fail "Unexpected executable."
-[[ "$(plist_value CFBundleVersion)" == "1" ]] || fail "Expected build number 1."
+[[ "$(plist_value CFBundleVersion)" =~ ^[1-9][0-9]*$ ]] || fail "Expected a positive build number."
+[[ "$(plist_value CFBundleName)" == "Next Meeting" ]] || fail "Unexpected app name."
+[[ "$(plist_value CFBundleDisplayName)" == "Next Meeting" ]] || fail "Unexpected display name."
 [[ "$(plist_value LSMinimumSystemVersion)" == "14.0" ]] || fail "Expected macOS 14 minimum."
 [[ "$(plist_value LSUIElement)" == "true" ]] || fail "The app must run in the menu bar."
 
@@ -62,7 +64,7 @@ codesign --display --entitlements - --xml "$APP_DIR" > "$STAGING_DIR/entitlement
 ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" "$STAGING_DIR/$ASSET_NAME"
 mkdir "$STAGING_DIR/verify"
 ditto -x -k "$STAGING_DIR/$ASSET_NAME" "$STAGING_DIR/verify"
-UNPACKED_APP="$STAGING_DIR/verify/NextMeeting.app"
+UNPACKED_APP="$STAGING_DIR/verify/Next Meeting.app"
 codesign --verify --strict --verbose=2 "$UNPACKED_APP"
 while IFS= read -r -d '' file; do
     relative="${file#"$APP_DIR/"}"

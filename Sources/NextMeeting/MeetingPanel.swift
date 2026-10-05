@@ -69,7 +69,7 @@ struct MeetingPanel: View {
                     .buttonStyle(IconButtonStyle()).help("Back to meetings")
                     .accessibilityLabel("Back to meetings")
             }
-            Text(showingSettings ? "Settings" : selectedMeeting != nil ? "Meeting" : "NextMeeting")
+            Text(showingSettings ? "Settings" : selectedMeeting != nil ? "Meeting" : "Next Meeting")
                 .font(.system(size: 14, weight: .semibold))
             if store.isDemo {
                 Text("PREVIEW").font(.system(size: 8, weight: .bold)).tracking(0.7)
@@ -87,7 +87,7 @@ struct MeetingPanel: View {
                     .keyboardShortcut("r")
                 Button("Open Calendar", systemImage: "calendar") { openCalendarSelection() }
                 Divider()
-                Button("Quit NextMeeting") { NSApplication.shared.terminate(nil) }.keyboardShortcut("q")
+                Button("Quit Next Meeting") { NSApplication.shared.terminate(nil) }.keyboardShortcut("q")
             } label: { Image(systemName: "ellipsis").font(.system(size: 15, weight: .semibold)) }
                 .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
                 .frame(width: 24, height: 26).help("More options").accessibilityLabel("More options")
@@ -164,20 +164,12 @@ struct MeetingPanel: View {
 
     private func featuredMeeting(_ meeting: Meeting, now: Date) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text(meeting.startDate <= now ? "In progress" : "Next meeting")
-                    .font(.system(size: 11, weight: .medium))
-                Spacer()
-                Text(meeting.startDate.formatted(date: .omitted, time: .shortened))
-                    .font(.system(size: 11, weight: .medium)).monospacedDigit()
-            }.foregroundStyle(.secondary)
-
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(countdownNumber(meeting, now: now))
                     .font(.system(size: 30, weight: .regular)).monospacedDigit()
                 Text(countdownUnit(meeting, now: now))
                     .font(.system(size: 13, weight: .medium)).foregroundStyle(.secondary)
-            }.padding(.top, 8).padding(.bottom, 7)
+            }.padding(.bottom, 7)
 
             Button { selectedMeeting = meeting } label: {
                 Text(meeting.title).font(.system(size: 17, weight: .semibold))
@@ -237,7 +229,7 @@ struct MeetingPanel: View {
                 .font(.system(size: 27, weight: .medium)).lineSpacing(2).padding(.bottom, 12)
             Text(store.access == .notDetermined
                  ? "See what’s next and the meetings ahead, right from your menu bar."
-                 : "NextMeeting needs permission to show events from your calendars.")
+                 : "Next Meeting needs permission to show events from your calendars.")
                 .font(.system(size: 13)).foregroundStyle(.secondary).lineSpacing(4)
             VStack(alignment: .leading, spacing: 12) {
                 Label("Uses the accounts in Apple Calendar", systemImage: "calendar")
@@ -260,7 +252,7 @@ struct MeetingPanel: View {
                 Text("macOS will ask for calendar access.")
                     .font(.system(size: 10)).foregroundStyle(.tertiary).padding(.top, 10)
             } else {
-                Text("Privacy & Security → Calendars → NextMeeting")
+                Text("Privacy & Security → Calendars → Next Meeting")
                     .font(.system(size: 10)).foregroundStyle(.secondary).padding(.top, 10)
             }
             if let error = store.errorMessage {
@@ -275,7 +267,7 @@ struct MeetingPanel: View {
             VStack(alignment: .leading, spacing: 22) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Calendars").font(.system(size: 17, weight: .semibold))
-                    Text("Choose which calendars appear in NextMeeting.")
+                    Text("Choose which calendars appear in Next Meeting.")
                         .font(.system(size: 12)).foregroundStyle(.secondary).lineSpacing(3)
                 }
                 if store.access != .granted {
@@ -332,7 +324,7 @@ struct MeetingPanel: View {
                 }
                 VStack(alignment: .leading, spacing: 8) {
                     Label("Private by default", systemImage: "lock").font(.system(size: 11, weight: .medium))
-                    Text("NextMeeting reads your calendars on this Mac. It never changes events or sends them to a server.")
+                    Text("Next Meeting reads your calendars on this Mac. It never changes events or sends them to a server.")
                         .font(.system(size: 11)).foregroundStyle(.secondary).lineSpacing(3)
                     Text("All-day events and declined invitations are hidden.")
                         .font(.system(size: 11)).foregroundStyle(.secondary).lineSpacing(3)

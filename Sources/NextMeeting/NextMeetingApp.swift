@@ -24,7 +24,7 @@ enum NextMeetingApp {
     private static func verifyCalendars() {
         guard var report = UserDefaults.standard.dictionary(forKey: "NextMeeting.connectionSummary"),
               let verifiedAt = report["verifiedAt"] as? TimeInterval else {
-            print("{\"status\":\"not_verified\",\"message\":\"Open NextMeeting from its app bundle first.\"}")
+            print("{\"status\":\"not_verified\",\"message\":\"Open Next Meeting from its app bundle first.\"}")
             exit(1)
         }
         let fresh = Date().timeIntervalSince1970 - verifiedAt < 180
@@ -69,7 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "calendar.badge.clock", accessibilityDescription: "NextMeeting")
+            button.image = NSImage(systemSymbolName: "calendar.badge.clock", accessibilityDescription: "Next Meeting")
             button.image?.size = NSSize(width: 18, height: 18)
             button.image?.isTemplate = true
             button.imagePosition = .imageLeading
@@ -96,7 +96,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
                                                       height: isPopoverPreview ? 120 : 520),
                                   styleMask: isPopoverPreview ? [.titled, .closable] : [.titled, .closable, .fullSizeContentView],
                                   backing: .buffered, defer: false)
-            window.title = isPreview ? "NextMeeting Preview" : "NextMeeting"
+            window.title = isPreview ? "Next Meeting Preview" : "Next Meeting"
             if isPopoverPreview {
                 let label = NSTextField(labelWithString: "Sample meetings · Native popover")
                 let button = NSButton(title: "Open sample popover", target: self, action: #selector(showPreviewPopover))
@@ -146,10 +146,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     @objc private func togglePopover(_ sender: NSStatusBarButton) {
         if NSApp.currentEvent?.type == .rightMouseUp {
             let menu = NSMenu()
-            menu.addItem(withTitle: "Open NextMeeting", action: #selector(openPanel), keyEquivalent: "")
+            menu.addItem(withTitle: "Open Next Meeting", action: #selector(openPanel), keyEquivalent: "")
             menu.addItem(withTitle: "Refresh Calendars", action: #selector(refreshCalendars), keyEquivalent: "r")
             menu.addItem(.separator())
-            menu.addItem(withTitle: "Quit NextMeeting", action: #selector(quit), keyEquivalent: "q")
+            menu.addItem(withTitle: "Quit Next Meeting", action: #selector(quit), keyEquivalent: "q")
             for item in menu.items { item.target = self }
             statusItem.menu = menu
             statusItem.button?.performClick(nil)
@@ -196,8 +196,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         guard let button = statusItem?.button, let store else { return }
         let now = Date()
         if store.access != .granted {
-            button.title = " NextMeeting"
-            button.toolTip = "Connect your calendars to NextMeeting"
+            button.title = " Next Meeting"
+            button.toolTip = "Connect your calendars to Next Meeting"
         } else if let meeting = MeetingLogic.nextMeeting(store.meetings, now: now) {
             let status = MeetingLogic.statusText(for: meeting, now: now)
             let title = meeting.title.count > 22 ? String(meeting.title.prefix(21)) + "…" : meeting.title
@@ -208,6 +208,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             button.toolTip = "No meetings in the next 24 hours"
         }
         if store.isDemo { button.title = " Preview ·" + button.title }
-        button.setAccessibilityLabel("NextMeeting, \(button.title.trimmingCharacters(in: .whitespaces))")
+        button.setAccessibilityLabel("Next Meeting, \(button.title.trimmingCharacters(in: .whitespaces))")
     }
 }

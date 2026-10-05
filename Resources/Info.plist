@@ -11,15 +11,15 @@
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>NextMeeting</string>
+    <string>Next Meeting</string>
     <key>CFBundleDisplayName</key>
-    <string>NextMeeting</string>
+    <string>Next Meeting</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>1.0.1</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>2</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>LSMinimumSystemVersion</key>
@@ -31,8 +31,8 @@
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
     <key>NSCalendarsFullAccessUsageDescription</key>
-    <string>NextMeeting reads your calendars to show your next meeting and the meetings coming up in the next 24 hours.</string>
+    <string>Next Meeting reads your calendars to show your next meeting and the meetings coming up in the next 24 hours.</string>
     <key>NSCalendarsUsageDescription</key>
-    <string>NextMeeting reads your calendars to show your next meeting and upcoming meetings.</string>
+    <string>Next Meeting reads your calendars to show your next meeting and upcoming meetings.</string>
 </dict>
 </plist>

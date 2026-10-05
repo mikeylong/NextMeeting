@@ -70,7 +70,7 @@ final class AppPreferences: ObservableObject {
             else { try SMAppService.mainApp.unregister() }
             updateLoginStatus()
             loginError = SMAppService.mainApp.status == .requiresApproval
-                ? "Allow NextMeeting in System Settings → General → Login Items." : nil
+                ? "Allow Next Meeting in System Settings → General → Login Items." : nil
         } catch {
             updateLoginStatus()
             loginError = "macOS couldn’t update login items. Open System Settings → General → Login Items."
