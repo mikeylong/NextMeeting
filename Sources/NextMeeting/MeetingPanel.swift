@@ -184,7 +184,7 @@ struct MeetingPanel: View {
             }.font(.system(size: 11)).foregroundStyle(.secondary).padding(.top, 6)
 
             if let url = meeting.joinURL {
-                Button { if !store.isDemo { NSWorkspace.shared.open(url) } } label: {
+                Button { if !store.isDemo { Task { await AppActions.joinMeeting(url) } } } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "video")
                         Text("Join meeting")
@@ -357,7 +357,7 @@ struct MeetingPanel: View {
                 }
             }.frame(maxHeight: .infinity)
             if let url = meeting.joinURL {
-                Button { if !store.isDemo { NSWorkspace.shared.open(url) } } label: {
+                Button { if !store.isDemo { Task { await AppActions.joinMeeting(url) } } } label: {
                     HStack {
                         Image(systemName: "video")
                         Text("Join meeting")
