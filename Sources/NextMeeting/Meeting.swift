@@ -122,6 +122,15 @@ enum AttendeeRole: Int, Equatable, Sendable {
 }
 
 enum AttendeeLogic {
+    /// Sort visible names using the Mac's locale, ignoring letter case. Keep
+    /// source order for equivalent names without merging distinct identities.
+    static func alphabeticallySorted(_ attendees: [Attendee], locale: Locale = .current) -> [Attendee] {
+        attendees.enumerated().sorted { lhs, rhs in
+            let order = lhs.element.displayName.compare(rhs.element.displayName, options: .caseInsensitive, locale: locale)
+            return order == .orderedSame ? lhs.offset < rhs.offset : order == .orderedAscending
+        }.map(\.element)
+    }
+
     static func snapshot(identityURI: String?, fallbackID: String, name: String?, response: AttendeeResponse,
                          isOrganizer: Bool = false, isCurrentUser: Bool = false, role: AttendeeRole? = nil) -> Attendee {
         let uri = identityURI?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""

@@ -123,6 +123,25 @@ struct MeetingLogicTests {
         check(AttendeeLogic.deduplicated([unnamedHost, organizerInvite]).first?.displayName == "Host", "known attendee name supplements unknown organizer name")
         check(AttendeeLogic.deduplicated([alex, anotherAlex]).map(\.id) == [alex.id, anotherAlex.id], "ordinary attendee order stays stable")
 
+        let displayLocale = Locale(identifier: "en_US")
+        let zoeHost = attendee("mailto:zoe@example.test", fallback: "host", name: "Zoe", response: .tentative,
+                               organizer: true, currentUser: true, role: .chair)
+        let alice = attendee("mailto:alice@example.test", fallback: "alice", name: "alice", response: .declined, role: .optional)
+        let bob = attendee("mailto:bob@example.test", fallback: "bob", name: "Bob")
+        let emile = attendee("mailto:emile@example.test", fallback: "emile", name: "Émile")
+        let sortedAttendees = AttendeeLogic.alphabeticallySorted([zoeHost, bob, emile, alice], locale: displayLocale)
+        check(sortedAttendees.map(\.displayName) == ["alice", "Bob", "Émile", "Zoe"], "visible attendee names sort alphabetically with case and locale collation")
+        check(sortedAttendees.last == zoeHost, "organizer sorts alphabetically and retains Organizer, You, role, and response metadata")
+        check(sortedAttendees.first == alice, "sorting retains attendee response and optional role")
+        let lowerAlex = attendee("mailto:lower-alex@example.test", fallback: "lower", name: "alex")
+        let equalNames = [anotherAlex, lowerAlex, alex]
+        check(AttendeeLogic.alphabeticallySorted(equalNames, locale: displayLocale) == equalNames, "equivalent visible names retain distinct identities and source order")
+        let fallbackNames = [anonymous[0], addressOnly, bob]
+        check(AttendeeLogic.alphabeticallySorted(fallbackNames, locale: displayLocale).map(\.id) == [addressOnly.id, bob.id, anonymous[0].id], "email and Unknown fallback names follow visible alphabetical order")
+        check(AttendeeLogic.alphabeticallySorted([], locale: displayLocale).isEmpty, "empty attendee list stays empty")
+        check(AttendeeLogic.alphabeticallySorted([zoeHost], locale: displayLocale) == [zoeHost], "one attendee is unchanged")
+        check(sortedAttendees.count == 4 && Set(sortedAttendees.map(\.id)).count == 4, "alphabetizing never drops attendees")
+
         print("Meeting logic: \(assertions) checks passed.")
     }
 }
