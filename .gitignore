@@ -1,0 +1,8 @@
+.DS_Store
+/.build/
+/build/
+/.swiftpm/
+*.xcuserstate
+xcuserdata/
+/VERIFICATION.md
+/Design/References/
