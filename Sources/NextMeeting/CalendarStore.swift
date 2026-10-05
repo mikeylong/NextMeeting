@@ -210,8 +210,8 @@ final class CalendarStore: ObservableObject {
     }
 
     private static let demoCalendars = [
-        CalendarChoice(id: "demo-work", title: "Work", source: "Example calendars", colorHex: "#4C83DA"),
-        CalendarChoice(id: "demo-personal", title: "Personal", source: "Example calendars", colorHex: "#AF79D6")
+        CalendarChoice(id: "demo-work", title: "Calendar", source: "Example organization", colorHex: "#4C83DA"),
+        CalendarChoice(id: "demo-personal", title: "Personal", source: "Personal account", colorHex: "#AF79D6")
     ]
 
     private static func demoMeetings(anchor: Date) -> [Meeting] {
@@ -220,6 +220,7 @@ final class CalendarStore: ObservableObject {
             let calendar = demoCalendars[personal ? 1 : 0]
             return Meeting(id: id, title: title, startDate: anchor.addingTimeInterval(minutes * 60),
                            endDate: anchor.addingTimeInterval((minutes + duration) * 60), calendarTitle: calendar.title,
+                           calendarSource: calendar.source,
                            calendarID: calendar.id, colorHex: calendar.colorHex, location: location,
                            joinURL: link.flatMap(URL.init(string:)), attendees: attendees)
         }
@@ -242,7 +243,7 @@ final class CalendarStore: ObservableObject {
             Attendee(id: "demo-morgan", displayName: "Morgan Wilson", response: .unknown)
         ]
         return [
-            event("demo-design", "Design review", minutes: 12, duration: 45, link: "https://meet.google.com/abc-defg-hij", attendees: reviewAttendees),
+            event("demo-design", "Design review", minutes: 12, duration: 45, location: "https://meet.google.com/abc-defg-hij", link: "https://meet.google.com/abc-defg-hij", attendees: reviewAttendees),
             event("demo-sync", "Product sync", minutes: 95, duration: 30, link: "https://example.zoom.us/j/123456789", attendees: syncAttendees),
             event("demo-one-on-one", "Coffee with Alex", minutes: 235, duration: 45, personal: true, location: "Blue Bottle Coffee"),
             event("demo-planning", "Weekly planning", minutes: 21 * 60, duration: 30, link: "https://meet.google.com/klm-nopq-rst")
@@ -306,7 +307,8 @@ private actor CalendarReader {
             let id = calendar.calendarIdentifier + "|" + identifier + "|" + String(Int64(occurrence.timeIntervalSince1970 * 1_000))
             let attendees = Self.attendees(event, fallbackPrefix: id)
             return Meeting(id: id, title: title?.isEmpty == false ? title! : "Untitled meeting", startDate: start, endDate: end,
-                           calendarTitle: calendar.title, calendarID: calendar.calendarIdentifier,
+                           calendarTitle: calendar.title, calendarSource: calendar.source.title,
+                           calendarID: calendar.calendarIdentifier,
                            colorHex: Self.hex(calendar.cgColor), location: rawLocation?.isEmpty == false ? rawLocation : nil,
                            joinURL: join, eventIdentifier: event.eventIdentifier,
                            calendarItemIdentifier: event.calendarItemIdentifier,

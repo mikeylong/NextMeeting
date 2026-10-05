@@ -1,10 +1,10 @@
-# Next Meeting 1.0.3
+# Next Meeting 1.0.4
 
-Attendees now appear alphabetically by their displayed names, including the organizer. Sorting follows the Mac’s locale and ignores letter case. Attendees with equivalent names keep their existing order.
+Meeting labels now include the account and calendar, such as **Example organization · Calendar**. Account names match Apple Calendar.
 
-Organizer, You, optional-attendee, and response labels are preserved.
+Detail icons now align with the first line of text, including rows with subtitles or wrapped titles.
 
-Calendar selections, preferences, and calendar access carry over from the previous version. Meeting app routing, the design, calendar sync, and Apple Calendar event selection stay the same.
+Calendar selections, preferences, calendar access, alphabetical attendee order, and meeting app routing carry over from the previous version.
 
 Requires an Apple silicon Mac running macOS 14 or later. The download includes the app and a SHA-256 checksum.
 

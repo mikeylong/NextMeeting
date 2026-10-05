@@ -178,7 +178,7 @@ struct MeetingPanel: View {
 
             HStack(spacing: 5) {
                 Circle().fill(Color(hex: meeting.colorHex)).frame(width: 5, height: 5)
-                Text(meeting.calendarTitle).lineLimit(1)
+                Text(meeting.calendarDisplayTitle).lineLimit(1)
                 Text("·")
                 Text(timeRange(meeting)).monospacedDigit().lineLimit(1)
             }.font(.system(size: 11)).foregroundStyle(.secondary).padding(.top, 6)
@@ -344,7 +344,7 @@ struct MeetingPanel: View {
                     VStack(alignment: .leading, spacing: 12) {
                         detailLine("calendar", title: meeting.startDate.formatted(.dateTime.weekday(.wide).month(.wide).day()),
                                    subtitle: timeRange(meeting))
-                        detailLine("circle.fill", title: meeting.calendarTitle, subtitle: "", color: Color(hex: meeting.colorHex))
+                        detailLine("circle.fill", title: meeting.calendarDisplayTitle, subtitle: "", color: Color(hex: meeting.colorHex))
                         if let location = meeting.location, !location.isEmpty {
                             detailLine("mappin", title: MeetingLogic.joinURL(from: [location]) != nil ? "Online meeting" : location, subtitle: "Location")
                         }
@@ -416,11 +416,18 @@ struct MeetingPanel: View {
     }
 
     private func detailLine(_ icon: String, title: String, subtitle: String, color: Color = .secondary) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        let titleFont = NSFont.systemFont(ofSize: 12, weight: .medium)
+        let titleCenterAboveBaseline = titleFont.capHeight / 2
+        return HStack(alignment: .firstTextBaseline, spacing: 12) {
             Image(systemName: icon).font(.system(size: icon == "circle.fill" ? 8 : 14)).foregroundStyle(color)
                 .frame(width: 18, height: 18)
+                // Center the symbol on the first line's capitals, even when
+                // the title wraps or a subtitle adds another text line.
+                .alignmentGuide(.firstTextBaseline) { dimensions in
+                    dimensions[VerticalAlignment.center] + titleCenterAboveBaseline
+                }
             VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.system(size: 12, weight: .medium)).fixedSize(horizontal: false, vertical: true)
+                Text(title).font(Font(titleFont)).fixedSize(horizontal: false, vertical: true)
                 if !subtitle.isEmpty { Text(subtitle).font(.system(size: 11)).foregroundStyle(.secondary) }
             }
         }
@@ -537,7 +544,7 @@ private struct MeetingRow: View {
                     Text(meeting.title).font(.system(size: 12, weight: .medium)).lineLimit(2)
                         .multilineTextAlignment(.leading)
                     HStack(spacing: 4) {
-                        Text(meeting.calendarTitle).lineLimit(1)
+                        Text(meeting.calendarDisplayTitle).lineLimit(1)
                         if meeting.startDate <= now && meeting.endDate > now {
                             Text("· Now").foregroundStyle(PanelStyle.accent)
                         }
@@ -549,7 +556,7 @@ private struct MeetingRow: View {
             }.padding(.horizontal, 16).padding(.vertical, 11)
                 .contentShape(Rectangle())
         }.buttonStyle(RowButtonStyle())
-            .accessibilityLabel("\(meeting.title), \(timeRange(meeting)), \(meeting.calendarTitle)")
+            .accessibilityLabel("\(meeting.title), \(timeRange(meeting)), \(meeting.calendarDisplayTitle)")
             .accessibilityHint("Show meeting details")
     }
 }
