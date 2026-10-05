@@ -6,6 +6,7 @@ struct Meeting: Identifiable, Equatable, Sendable {
     let startDate: Date
     let endDate: Date
     let calendarTitle: String
+    let calendarSource: String
     let calendarID: String
     let colorHex: String
     let location: String?
@@ -24,6 +25,7 @@ struct Meeting: Identifiable, Equatable, Sendable {
         startDate: Date,
         endDate: Date,
         calendarTitle: String,
+        calendarSource: String = "",
         calendarID: String,
         colorHex: String,
         location: String? = nil,
@@ -41,6 +43,7 @@ struct Meeting: Identifiable, Equatable, Sendable {
         self.startDate = startDate
         self.endDate = endDate
         self.calendarTitle = calendarTitle
+        self.calendarSource = calendarSource
         self.calendarID = calendarID
         self.colorHex = colorHex
         self.location = location
@@ -56,6 +59,15 @@ struct Meeting: Identifiable, Equatable, Sendable {
 
     func isOngoing(at now: Date) -> Bool {
         startDate <= now && endDate > now
+    }
+
+    var calendarDisplayTitle: String {
+        let source = calendarSource.trimmingCharacters(in: .whitespacesAndNewlines)
+        let title = calendarTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !source.isEmpty else { return title.isEmpty ? "Calendar" : title }
+        guard !title.isEmpty else { return source }
+        guard source.compare(title, options: .caseInsensitive) != .orderedSame else { return title }
+        return source + " · " + title
     }
 }
 

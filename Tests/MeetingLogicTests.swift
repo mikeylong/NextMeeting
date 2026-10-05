@@ -40,6 +40,21 @@ struct MeetingLogicTests {
         check(MeetingLogic.statusText(for: event("later", start: 7500, end: 8000), now: now) == "In 2 hr 5 min", "hour and minute countdown")
         check(MeetingLogic.statusText(for: ended, now: now) == "Ended", "ended status")
 
+        func namedCalendar(_ title: String, source: String = "") -> Meeting {
+            Meeting(id: "calendar-label", title: "Meeting", startDate: now, endDate: now.addingTimeInterval(1800),
+                    calendarTitle: title, calendarSource: source, calendarID: "work", colorHex: "#000000")
+        }
+        let organizationCalendar = namedCalendar("Calendar", source: "Example organization")
+        check(organizationCalendar.calendarDisplayTitle == "Example organization · Calendar", "generic calendar name includes its actual source")
+        check(namedCalendar("  Calendar \n", source: "  Example organization \n").calendarDisplayTitle == "Example organization · Calendar", "calendar display trims source and title whitespace")
+        check(namedCalendar("Work").calendarDisplayTitle == "Work", "older meeting snapshots retain their calendar title without a source")
+        check(namedCalendar("Work", source: " \n").calendarDisplayTitle == "Work", "blank source does not add a separator")
+        check(namedCalendar("Work", source: "work").calendarDisplayTitle == "Work", "equivalent source and calendar titles appear once")
+        check(namedCalendar(" \n", source: "Example organization").calendarDisplayTitle == "Example organization", "missing calendar title retains the known source")
+        check(namedCalendar(" \n").calendarDisplayTitle == "Calendar", "missing source and title have a readable fallback")
+        check(MeetingLogic.upcoming([organizationCalendar], now: now).first == organizationCalendar,
+              "schedule filtering retains source, calendar title, and meeting identity")
+
         let links = [
             "https://company.zoom.us/j/123456789?pwd=abc",
             "https://zoom.us/my/designteam",

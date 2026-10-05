@@ -30,6 +30,8 @@ If you previously denied access, go to **System Settings → Privacy & Security 
 
 Calendar selections persist. New calendars appear automatically and can be turned off individually. Times follow the Mac’s time zone, locale, and 12/24-hour preference.
 
+Meeting labels show the account name followed by the calendar name, such as **Example organization · Calendar**. Account names come from Apple Calendar. Detail icons align with the first line of text, including rows with a subtitle or a wrapped title.
+
 Next Meeting reads events locally, never edits them, and has no account, analytics, or server. macOS requires EventKit’s full calendar-access permission to read event details; the app does not use its write capability.
 
 ## Build and verify
