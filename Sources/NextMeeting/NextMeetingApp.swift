@@ -198,7 +198,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         if store.access != .granted {
             button.title = " Next Meeting"
             button.toolTip = "Connect your calendars to Next Meeting"
-        } else if let meeting = MeetingLogic.nextMeeting(store.meetings, now: now) {
+        } else if let meeting = MeetingLogic.menuBarMeeting(store.meetings, now: now) {
             let status = MeetingLogic.statusText(for: meeting, now: now)
             let title = meeting.title.count > 22 ? String(meeting.title.prefix(21)) + "…" : meeting.title
             button.title = preferences.showMeetingTitle ? " \(title) · \(status)" : " \(status)"

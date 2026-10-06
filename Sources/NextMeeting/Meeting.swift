@@ -232,6 +232,13 @@ enum MeetingLogic {
         return candidates.first(where: { $0.isOngoing(at: now) }) ?? candidates.first
     }
 
+    /// While a meeting is active, the menu bar shows what starts next within
+    /// the rolling schedule. Keep the active meeting as the fallback.
+    static func menuBarMeeting(_ meetings: [Meeting], now: Date) -> Meeting? {
+        let candidates = upcoming(meetings, now: now)
+        return candidates.first(where: { $0.startDate > now }) ?? candidates.first
+    }
+
     static func statusText(for meeting: Meeting, now: Date) -> String {
         if meeting.endDate <= now { return "Ended" }
         if meeting.isOngoing(at: now) { return "Now" }

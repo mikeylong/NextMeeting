@@ -21,7 +21,7 @@ If you previously denied access, go to **System Settings → Privacy & Security 
 
 ## What it shows
 
-1. The menu bar shows the next meeting’s title and a countdown. Turn off **Show meeting title in menu bar** for a shorter label.
+1. The menu bar shows the next upcoming meeting’s title and countdown, even while another meeting is in progress. If no meeting starts later in the next 24 hours, it shows the active meeting. Turn off **Show meeting title in menu bar** for a shorter label.
 2. The panel shows the next meeting, followed by timed events over a rolling 24 hours. Meetings already in progress are included. Ended events, all-day events, canceled meetings, and declined invitations are hidden.
 3. Click any row to see meeting details and attendees. Attendees are sorted alphabetically by their displayed names, including the organizer. Response labels show Accepted, Declined, No reply, Tentative, or the status supplied by the calendar. Organizer, your own entry, and optional attendees are marked. Unknown stays Unknown when the calendar does not supply a response.
 4. **Join meeting** opens supported Zoom, Microsoft Teams, and Webex invitations in the matching installed app. If the app is unavailable or the native open request fails, the original invitation opens in your default browser. Google Meet opens in the browser. Zoom personal-room names and host-start invitations also use the browser because they cannot be represented faithfully by the supported native join format. **Open Calendar** selects the meeting and opens its details in Apple Calendar, including the correct occurrence of a recurring meeting. The footer and More menu open the selected meeting, or the next meeting from the agenda.
