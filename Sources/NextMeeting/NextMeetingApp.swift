@@ -149,6 +149,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             menu.addItem(withTitle: "Open Next Meeting", action: #selector(openPanel), keyEquivalent: "")
             menu.addItem(withTitle: "Refresh Calendars", action: #selector(refreshCalendars), keyEquivalent: "r")
             menu.addItem(.separator())
+            menu.addItem(withTitle: AppVersion.menuTitle, action: nil, keyEquivalent: "").isEnabled = false
             menu.addItem(withTitle: "Quit Next Meeting", action: #selector(quit), keyEquivalent: "q")
             for item in menu.items { item.target = self }
             statusItem.menu = menu
