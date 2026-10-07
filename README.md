@@ -1,5 +1,18 @@
 # Next Meeting
 
+<table>
+  <tr>
+    <th>Dark mode</th>
+    <th>Light mode</th>
+  </tr>
+  <tr>
+    <td><img src="Design/NextMeeting-menubar-dark.png" width="360" alt="Next Meeting in dark mode, showing the menu bar countdown and open upcoming-meetings popover." /></td>
+    <td><img src="Design/NextMeeting-menubar-light.png" width="360" alt="Next Meeting in light mode, showing the menu bar countdown and open upcoming-meetings popover." /></td>
+  </tr>
+</table>
+
+Sample meetings shown.
+
 Next Meeting shows your next meeting in the macOS menu bar. Click it to see meetings in the next 24 hours, choose calendars, or open a meeting link.
 
 The panel follows the macOS Weather and Display menu bar panels: a flat surface, consistent system typography, thin dividers, and a compact layout.
