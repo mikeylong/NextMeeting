@@ -4,7 +4,7 @@ import AppKit
 private enum PanelStyle {
     static let accent = Color(nsColor: NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            ? NSColor(red: 0.40, green: 0.69, blue: 1, alpha: 1)
+            ? NSColor(red: 0.30, green: 0.62, blue: 1, alpha: 1)
             : NSColor(red: 0.0, green: 0.42, blue: 0.88, alpha: 1)
     })
     static let card = Color.primary.opacity(0.045)
@@ -152,7 +152,7 @@ struct MeetingPanel: View {
                                     .background(.ultraThinMaterial)
                             }
                         }
-                    }.padding(.bottom, 8)
+                    }.padding(.bottom, 8).background(GlassScrollerInstaller())
                 }.scrollIndicators(.automatic)
             }
             if let error = store.errorMessage {
@@ -539,7 +539,7 @@ private struct MeetingRow: View {
                         .font(.system(size: 9)).foregroundStyle(.secondary)
                 }.frame(width: 58, alignment: .trailing)
                 RoundedRectangle(cornerRadius: 2).fill(Color(hex: meeting.colorHex))
-                    .frame(width: 3, height: 31)
+                    .frame(width: 4, height: 31)
                 VStack(alignment: .leading, spacing: 5) {
                     Text(meeting.title).font(.system(size: 12, weight: .medium)).lineLimit(2)
                         .multilineTextAlignment(.leading)
@@ -636,4 +636,42 @@ private func videoProvider(_ url: URL) -> String {
     if host.contains("teams") { return "Microsoft Teams" }
     if host.contains("webex") { return "Webex" }
     return host
+}
+
+/// The system's legacy scroller paints a fixed gray knob and track that vanish or glare on Liquid Glass.
+private final class GlassScroller: NSScroller {
+    override class var isCompatibleWithOverlayScrollers: Bool { true }
+
+    override class func scrollerWidth(for controlSize: NSControl.ControlSize, scrollerStyle: NSScroller.Style) -> CGFloat {
+        scrollerStyle == .legacy ? 11 : super.scrollerWidth(for: controlSize, scrollerStyle: scrollerStyle)
+    }
+
+    override func drawKnobSlot(in slotRect: NSRect, highlight flag: Bool) {
+        guard scrollerStyle == .legacy else { return super.drawKnobSlot(in: slotRect, highlight: flag) }
+        NSColor.labelColor.withAlphaComponent(0.06).setFill()
+        slotRect.fill()
+    }
+
+    override func drawKnob() {
+        guard scrollerStyle == .legacy else { return super.drawKnob() }
+        let knob = NSBezierPath(roundedRect: rect(for: .knob).insetBy(dx: 3, dy: 3), xRadius: 2.5, yRadius: 2.5)
+        NSColor.labelColor.withAlphaComponent(0.5).setFill()
+        knob.fill()
+        NSColor.black.withAlphaComponent(0.18).setStroke()
+        knob.lineWidth = 0.5
+        knob.stroke()
+    }
+}
+
+private struct GlassScrollerInstaller: NSViewRepresentable {
+    final class Probe: NSView {
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            guard let scrollView = enclosingScrollView, !(scrollView.verticalScroller is GlassScroller) else { return }
+            scrollView.verticalScroller = GlassScroller()
+        }
+    }
+
+    func makeNSView(context: Context) -> Probe { Probe() }
+    func updateNSView(_ nsView: Probe, context: Context) {}
 }
