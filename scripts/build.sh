@@ -1,11 +1,21 @@
 #!/bin/bash
 set -euo pipefail
 
+[[ $# -le 1 ]] || { echo 'Usage: scripts/build.sh [--release]' >&2; exit 1; }
+BUILD_KIND="local"
+case "${1:-}" in
+    '') ;;
+    --release) BUILD_KIND="release" ;;
+    *) echo 'Usage: scripts/build.sh [--release]' >&2; exit 1 ;;
+esac
+
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="$PROJECT_DIR/build"
 APP_DIR="$BUILD_DIR/Next Meeting.app"
 SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
 ARCH="$(uname -m)"
+SWIFT_FLAGS=(-O -whole-module-optimization -parse-as-library -swift-version 6
+    -module-name NextMeeting -target "$ARCH-apple-macosx14.0")
 
 # Keep compiler caches and generated files in the local project.
 mkdir -p "$BUILD_DIR/module-cache" "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
@@ -22,12 +32,17 @@ if [[ ! -f "${SOURCES[0]}" ]]; then
     exit 1
 fi
 
-xcrun swiftc -O -whole-module-optimization -parse-as-library -swift-version 6 \
-    -module-name NextMeeting -module-cache-path "$BUILD_DIR/module-cache" \
-    -target "$ARCH-apple-macosx14.0" -sdk "$SDK_PATH" \
+xcrun swiftc "${SWIFT_FLAGS[@]}" -module-cache-path "$BUILD_DIR/module-cache" \
+    -sdk "$SDK_PATH" \
     "${SOURCES[@]}" -o "$APP_DIR/Contents/MacOS/NextMeeting"
 
 cp "$PROJECT_DIR/Resources/Info.plist" "$APP_DIR/Contents/Info.plist"
+if [[ "$BUILD_KIND" == local ]]; then
+    BUILD_IDENTIFIER="$("$PROJECT_DIR/scripts/build-identifier.sh" "$PROJECT_DIR" \
+        "$(xcrun swiftc --version)" "$(xcrun --sdk macosx --show-sdk-version)" \
+        "$(xcrun --sdk macosx --show-sdk-build-version)" "${SWIFT_FLAGS[@]}")"
+    plutil -insert NextMeetingBuildIdentifier -string "$BUILD_IDENTIFIER" "$APP_DIR/Contents/Info.plist"
+fi
 cp "$PROJECT_DIR/Resources/AppIcon.icns" "$APP_DIR/Contents/Resources/AppIcon.icns"
 cp "$PROJECT_DIR/LICENSE" "$APP_DIR/Contents/Resources/LICENSE"
 printf 'APPL????' > "$APP_DIR/Contents/PkgInfo"

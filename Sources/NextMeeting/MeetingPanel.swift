@@ -4,11 +4,12 @@ import AppKit
 private enum PanelStyle {
     static let accent = Color(nsColor: NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            ? NSColor(red: 0.40, green: 0.69, blue: 1, alpha: 1)
+            ? NSColor(red: 0.30, green: 0.62, blue: 1, alpha: 1)
             : NSColor(red: 0.0, green: 0.42, blue: 0.88, alpha: 1)
     })
-    static let card = Color.primary.opacity(0.045)
-    static let rule = Color.primary.opacity(0.08)
+    // A thin neutral fill quiets the backdrop without adding another glass layer.
+    static let card = Color(nsColor: .windowBackgroundColor).opacity(0.28)
+    static let rule = Color(nsColor: .separatorColor)
 }
 
 struct MeetingPanel: View {
@@ -31,20 +32,26 @@ struct MeetingPanel: View {
             VStack(spacing: 0) {
                 header
                 Rectangle().fill(PanelStyle.rule).frame(height: 1)
-                if showingSettings {
-                    settings
-                } else if let meeting = selectedMeeting {
-                    meetingDetail(meeting, now: context.date)
-                } else if store.access != .granted {
-                    connection
-                } else {
-                    agenda(now: context.date)
+                Group {
+                    if showingSettings {
+                        settings
+                    } else if let meeting = selectedMeeting {
+                        meetingDetail(meeting, now: context.date)
+                    } else if store.access != .granted {
+                        connection
+                    } else {
+                        agenda(now: context.date)
+                    }
                 }
                 footer(now: context.date)
             }
             .frame(width: 340, height: PanelLayout.height(meetingCount: store.meetings.count, access: store.access,
                                                        showingSettings: showingSettings, showingDetails: selectedMeeting != nil))
             // NSPopover supplies one native surface for the body and its arrow.
+            // Enable vibrant semantic text without covering that surface with
+            // another material or an opaque content background.
+            .environment(\.backgroundMaterial, .regular)
+            .foregroundStyle(.primary)
             .tint(PanelStyle.accent)
             .preferredColorScheme(ProcessInfo.processInfo.arguments.contains("--light") ||
                                   Bundle.main.object(forInfoDictionaryKey: "NextMeetingPreviewAppearance") as? String == "light" ? .light : nil)
@@ -147,13 +154,14 @@ struct MeetingPanel: View {
                                         .tracking(0.6).foregroundStyle(.secondary)
                                     Spacer()
                                     Text(group.date.formatted(.dateTime.month(.abbreviated).day()))
-                                        .font(.system(size: 10)).foregroundStyle(.tertiary)
+                                        .font(.system(size: 10)).foregroundStyle(.secondary)
                                 }.padding(.horizontal, 16).padding(.vertical, 8)
-                                    .background(Color(nsColor: .windowBackgroundColor).opacity(0.98))
+                                    .background(PanelMaterial(material: .headerView).allowsHitTesting(false))
                             }
                         }
                     }.padding(.bottom, 8)
                 }.scrollIndicators(.automatic)
+                    .background(PanelStyle.card)
             }
             if let error = store.errorMessage {
                 Text(error).font(.system(size: 11)).foregroundStyle(.orange)
@@ -415,12 +423,15 @@ struct MeetingPanel: View {
         }
     }
 
-    private func detailLine(_ icon: String, title: String, subtitle: String, color: Color = .secondary) -> some View {
+    private func detailLine(_ icon: String, title: String, subtitle: String, color: Color? = nil) -> some View {
         let titleFont = NSFont.systemFont(ofSize: 12, weight: .medium)
         let titleCenterAboveBaseline = titleFont.capHeight / 2
+        let symbol = Image(systemName: icon).font(.system(size: icon == "circle.fill" ? 8 : 14))
         return HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Image(systemName: icon).font(.system(size: icon == "circle.fill" ? 8 : 14)).foregroundStyle(color)
-                .frame(width: 18, height: 18)
+            Group {
+                if let color { symbol.foregroundStyle(color) }
+                else { symbol.foregroundStyle(.secondary) }
+            }.frame(width: 18, height: 18)
                 // Center the symbol on the first line's capitals, even when
                 // the title wraps or a subtitle adds another text line.
                 .alignmentGuide(.firstTextBaseline) { dimensions in
@@ -539,7 +550,7 @@ private struct MeetingRow: View {
                         .font(.system(size: 9)).foregroundStyle(.secondary)
                 }.frame(width: 58, alignment: .trailing)
                 RoundedRectangle(cornerRadius: 2).fill(Color(hex: meeting.colorHex))
-                    .frame(width: 3, height: 31)
+                    .frame(width: 4, height: 31)
                 VStack(alignment: .leading, spacing: 5) {
                     Text(meeting.title).font(.system(size: 12, weight: .medium)).lineLimit(2)
                         .multilineTextAlignment(.leading)
@@ -636,4 +647,20 @@ private func videoProvider(_ url: URL) -> String {
     if host.contains("teams") { return "Microsoft Teams" }
     if host.contains("webex") { return "Webex" }
     return host
+}
+
+/// Protect pinned headers from scrolling content within the native popover.
+private struct PanelMaterial: NSViewRepresentable {
+    let material: NSVisualEffectView.Material
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = material
+        view.blendingMode = .withinWindow
+        return view
+    }
+
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = material
+    }
 }
