@@ -149,7 +149,7 @@ struct MeetingPanel: View {
                                     Text(group.date.formatted(.dateTime.month(.abbreviated).day()))
                                         .font(.system(size: 10)).foregroundStyle(.tertiary)
                                 }.padding(.horizontal, 16).padding(.vertical, 8)
-                                    .background(Color(nsColor: .windowBackgroundColor).opacity(0.98))
+                                    .background(.ultraThinMaterial)
                             }
                         }
                     }.padding(.bottom, 8)
