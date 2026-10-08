@@ -13,6 +13,8 @@ Run from your checkout:
 
 The build creates `build/Next Meeting.app` with its icon, calendar permission metadata, sandbox entitlements, MIT license notice, and a local ad hoc signature. Use this app bundle when checking calendar permission. The published releases use Developer ID signing and are currently not notarized.
 
+Local builds show `Version <version> (local <identifier>)` in the menu-bar right-click menu. The identifier covers the source, bundle resources and configuration, build scripts, compiler, SDK version and build, and compiler flags including architecture. Moving the checkout does not change it. Run `./scripts/test-build-identifier.sh` to check this behavior. To prepare an unlabeled release bundle, run `./scripts/build.sh --release` before Developer ID signing and release packaging. The release packager rejects bundles labeled as local builds.
+
 `scripts/test.sh` reports separate results for meeting logic, Apple Calendar event links, and meeting app routing. The checks use synthetic data and injected openers, without reading personal calendars, launching conference apps, or joining meetings.
 
 ## Preview the interface

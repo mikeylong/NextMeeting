@@ -7,11 +7,9 @@ private enum PanelStyle {
             ? NSColor(red: 0.30, green: 0.62, blue: 1, alpha: 1)
             : NSColor(red: 0.0, green: 0.42, blue: 0.88, alpha: 1)
     })
-    static let sectionTint = Color(nsColor: NSColor(name: nil) { appearance in
-        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? .clear : .black.withAlphaComponent(0.09)
-    })
-    static let card = Color.primary.opacity(0.045)
-    static let rule = Color.primary.opacity(0.08)
+    // A thin neutral fill quiets the backdrop without adding another glass layer.
+    static let card = Color(nsColor: .windowBackgroundColor).opacity(0.28)
+    static let rule = Color(nsColor: .separatorColor)
 }
 
 struct MeetingPanel: View {
@@ -34,20 +32,26 @@ struct MeetingPanel: View {
             VStack(spacing: 0) {
                 header
                 Rectangle().fill(PanelStyle.rule).frame(height: 1)
-                if showingSettings {
-                    settings
-                } else if let meeting = selectedMeeting {
-                    meetingDetail(meeting, now: context.date)
-                } else if store.access != .granted {
-                    connection
-                } else {
-                    agenda(now: context.date)
+                Group {
+                    if showingSettings {
+                        settings
+                    } else if let meeting = selectedMeeting {
+                        meetingDetail(meeting, now: context.date)
+                    } else if store.access != .granted {
+                        connection
+                    } else {
+                        agenda(now: context.date)
+                    }
                 }
                 footer(now: context.date)
             }
             .frame(width: 340, height: PanelLayout.height(meetingCount: store.meetings.count, access: store.access,
                                                        showingSettings: showingSettings, showingDetails: selectedMeeting != nil))
             // NSPopover supplies one native surface for the body and its arrow.
+            // Enable vibrant semantic text without covering that surface with
+            // another material or an opaque content background.
+            .environment(\.backgroundMaterial, .regular)
+            .foregroundStyle(.primary)
             .tint(PanelStyle.accent)
             .preferredColorScheme(ProcessInfo.processInfo.arguments.contains("--light") ||
                                   Bundle.main.object(forInfoDictionaryKey: "NextMeetingPreviewAppearance") as? String == "light" ? .light : nil)
@@ -150,13 +154,14 @@ struct MeetingPanel: View {
                                         .tracking(0.6).foregroundStyle(.secondary)
                                     Spacer()
                                     Text(group.date.formatted(.dateTime.month(.abbreviated).day()))
-                                        .font(.system(size: 10)).foregroundStyle(.tertiary)
+                                        .font(.system(size: 10)).foregroundStyle(.secondary)
                                 }.padding(.horizontal, 16).padding(.vertical, 8)
-                                    .background(PanelStyle.sectionTint).background(.ultraThinMaterial)
+                                    .background(PanelMaterial(material: .headerView).allowsHitTesting(false))
                             }
                         }
-                    }.padding(.bottom, 8).background(GlassScrollerInstaller())
+                    }.padding(.bottom, 8)
                 }.scrollIndicators(.automatic)
+                    .background(PanelStyle.card)
             }
             if let error = store.errorMessage {
                 Text(error).font(.system(size: 11)).foregroundStyle(.orange)
@@ -418,12 +423,15 @@ struct MeetingPanel: View {
         }
     }
 
-    private func detailLine(_ icon: String, title: String, subtitle: String, color: Color = .secondary) -> some View {
+    private func detailLine(_ icon: String, title: String, subtitle: String, color: Color? = nil) -> some View {
         let titleFont = NSFont.systemFont(ofSize: 12, weight: .medium)
         let titleCenterAboveBaseline = titleFont.capHeight / 2
+        let symbol = Image(systemName: icon).font(.system(size: icon == "circle.fill" ? 8 : 14))
         return HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Image(systemName: icon).font(.system(size: icon == "circle.fill" ? 8 : 14)).foregroundStyle(color)
-                .frame(width: 18, height: 18)
+            Group {
+                if let color { symbol.foregroundStyle(color) }
+                else { symbol.foregroundStyle(.secondary) }
+            }.frame(width: 18, height: 18)
                 // Center the symbol on the first line's capitals, even when
                 // the title wraps or a subtitle adds another text line.
                 .alignmentGuide(.firstTextBaseline) { dimensions in
@@ -641,40 +649,18 @@ private func videoProvider(_ url: URL) -> String {
     return host
 }
 
-/// The system's legacy scroller paints a fixed gray knob and track that vanish or glare on Liquid Glass.
-private final class GlassScroller: NSScroller {
-    override class var isCompatibleWithOverlayScrollers: Bool { true }
+/// Protect pinned headers from scrolling content within the native popover.
+private struct PanelMaterial: NSViewRepresentable {
+    let material: NSVisualEffectView.Material
 
-    override class func scrollerWidth(for controlSize: NSControl.ControlSize, scrollerStyle: NSScroller.Style) -> CGFloat {
-        scrollerStyle == .legacy ? 11 : super.scrollerWidth(for: controlSize, scrollerStyle: scrollerStyle)
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = material
+        view.blendingMode = .withinWindow
+        return view
     }
 
-    override func drawKnobSlot(in slotRect: NSRect, highlight flag: Bool) {
-        guard scrollerStyle == .legacy else { return super.drawKnobSlot(in: slotRect, highlight: flag) }
-        NSColor.labelColor.withAlphaComponent(0.06).setFill()
-        slotRect.fill()
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = material
     }
-
-    override func drawKnob() {
-        guard scrollerStyle == .legacy else { return super.drawKnob() }
-        let knob = NSBezierPath(roundedRect: rect(for: .knob).insetBy(dx: 3, dy: 3), xRadius: 2.5, yRadius: 2.5)
-        NSColor.labelColor.withAlphaComponent(0.5).setFill()
-        knob.fill()
-        NSColor.black.withAlphaComponent(0.18).setStroke()
-        knob.lineWidth = 0.5
-        knob.stroke()
-    }
-}
-
-private struct GlassScrollerInstaller: NSViewRepresentable {
-    final class Probe: NSView {
-        override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            guard let scrollView = enclosingScrollView, !(scrollView.verticalScroller is GlassScroller) else { return }
-            scrollView.verticalScroller = GlassScroller()
-        }
-    }
-
-    func makeNSView(context: Context) -> Probe { Probe() }
-    func updateNSView(_ nsView: Probe, context: Context) {}
 }

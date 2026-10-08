@@ -31,6 +31,9 @@ ASSET_NAME="NextMeeting-$VERSION-macos-$ARCH.zip"
 [[ "$(plist_value CFBundleDisplayName)" == "Next Meeting" ]] || fail "Unexpected display name."
 [[ "$(plist_value LSMinimumSystemVersion)" == "14.0" ]] || fail "Expected macOS 14 minimum."
 [[ "$(plist_value LSUIElement)" == "true" ]] || fail "The app must run in the menu bar."
+if /usr/libexec/PlistBuddy -c 'Print :NextMeetingBuildIdentifier' "$INFO_PLIST" >/dev/null 2>&1; then
+    fail "The app is labeled as a local build. Use scripts/build.sh --release to prepare a release bundle."
+fi
 
 # Diagnostic modes remain opt-in command-line features. Preview/inspection
 # bundle flags must never silently turn the release into a diagnostic app.
@@ -38,7 +41,9 @@ if plutil -p "$INFO_PLIST" | /usr/bin/grep -Ei '"NextMeeting[^"]*(Preview|Inspec
     fail "The app has a preview or inspection bundle flag. Rebuild the canonical app."
 fi
 [[ "$(lipo -archs "$EXECUTABLE")" == "$ARCH" ]] || fail "Expected an Apple silicon arm64 executable."
-MIN_OS="$(otool -l "$EXECUTABLE" | awk '/LC_BUILD_VERSION/ { in_build = 1; next } in_build && /minos/ { print $2; exit }')"
+# Consume every load command so pipefail cannot mistake an early awk exit for
+# an otool failure when the executable has more data after LC_BUILD_VERSION.
+MIN_OS="$(otool -l "$EXECUTABLE" | awk '/LC_BUILD_VERSION/ { in_build = 1; next } in_build && /minos/ && !found { print $2; found = 1 }')"
 [[ "$MIN_OS" == "14.0" ]] || fail "The executable must target macOS 14.0."
 codesign --verify --strict --verbose=2 "$APP_DIR"
 
