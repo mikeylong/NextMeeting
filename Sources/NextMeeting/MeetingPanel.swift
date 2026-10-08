@@ -7,6 +7,9 @@ private enum PanelStyle {
             ? NSColor(red: 0.30, green: 0.62, blue: 1, alpha: 1)
             : NSColor(red: 0.0, green: 0.42, blue: 0.88, alpha: 1)
     })
+    static let sectionTint = Color(nsColor: NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? .clear : .black.withAlphaComponent(0.09)
+    })
     static let card = Color.primary.opacity(0.045)
     static let rule = Color.primary.opacity(0.08)
 }
@@ -149,7 +152,7 @@ struct MeetingPanel: View {
                                     Text(group.date.formatted(.dateTime.month(.abbreviated).day()))
                                         .font(.system(size: 10)).foregroundStyle(.tertiary)
                                 }.padding(.horizontal, 16).padding(.vertical, 8)
-                                    .background(.ultraThinMaterial)
+                                    .background(PanelStyle.sectionTint).background(.ultraThinMaterial)
                             }
                         }
                     }.padding(.bottom, 8).background(GlassScrollerInstaller())
