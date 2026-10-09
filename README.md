@@ -49,7 +49,7 @@ Next Meeting reads events locally, never edits them, and has no account, analyti
 
 ## Build and contribute
 
-Building requires macOS and Xcode command line tools with Swift 6. The app targets macOS 14 or later. The build uses the current Mac’s architecture and has no external dependencies.
+Building requires Xcode 26 or later command line tools, Swift 6, and the macOS 26 or later SDK. The app runs on macOS 14 or later. The build uses the current Mac’s architecture and has no external dependencies.
 
 ```sh
 git clone https://github.com/mikeylong/NextMeeting.git
