@@ -6,12 +6,12 @@
     <th>Light mode</th>
   </tr>
   <tr>
-    <td><img src="Design/NextMeeting-menubar-dark.png" width="360" alt="Next Meeting in dark mode, showing the menu bar countdown and open upcoming-meetings popover." /></td>
-    <td><img src="Design/NextMeeting-menubar-light.png" width="360" alt="Next Meeting in light mode, showing the menu bar countdown and open upcoming-meetings popover." /></td>
+    <td><img src="Design/NextMeeting-menubar-dark.png" width="360" alt="Next Meeting 1.0.9 in dark mode, showing the native popover with sample meetings and the bottom scroll edge." /></td>
+    <td><img src="Design/NextMeeting-menubar-light.png" width="360" alt="Next Meeting 1.0.9 in light mode, showing the native popover with sample meetings and the bottom scroll edge." /></td>
   </tr>
 </table>
 
-Sample meetings shown.
+Version 1.0.9 with sample meetings. Meeting actions are disabled in preview mode.
 
 Next Meeting shows your next meeting in the macOS menu bar. Click it to see meetings in the next 24 hours, choose calendars, or open a meeting link.
 
