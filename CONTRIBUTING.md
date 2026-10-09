@@ -1,6 +1,6 @@
 # Contributing to Next Meeting
 
-Build and test on a Mac with Xcode command line tools and Swift 6. Check the compiler with `xcrun swiftc --version`. The app targets macOS 14 or later; the scripts build for the current Mac’s architecture. No external packages are required.
+Build and test on a Mac with Xcode 26 or later command line tools, Swift 6, and the macOS 26 or later SDK. Check the compiler with `xcrun swiftc --version` and the SDK with `xcrun --sdk macosx --show-sdk-version`. The app runs on macOS 14 or later; the scripts build for the current Mac’s architecture. No external packages are required.
 
 ## Build and test
 

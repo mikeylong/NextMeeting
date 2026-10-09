@@ -1,10 +1,10 @@
-# Next Meeting 1.0.8
+# Next Meeting 1.0.9
 
-The meeting list, details, attendees, and settings now use lighter translucent surfaces with clearer text and dividers. Pinned day headers stay readable as meetings scroll beneath them.
+Meeting details and Settings now use native scroll edge effects above and below their content on macOS 26 and later. The agenda uses the same effect above its footer, while pinned day headers stay readable.
 
-Scrollbars follow your macOS preferences. Calendar markers and the dark-mode accent are easier to see against glass.
+Native action buttons, aligned dividers, larger small labels, and consistent spacing make the panel easier to read and use. Preference switches line up, and toolbar controls have larger click targets.
 
-Local development builds show an identifier in the menu-bar version row so you can distinguish a trial from an official release.
+Controls and scroll edges follow light and dark appearance, Increase Contrast, and Reduce Transparency. Earlier supported macOS versions use standard buttons and scrolling.
 
 Calendar selections, preferences, calendar access, attendee order, and meeting app routing carry over from the previous version.
 

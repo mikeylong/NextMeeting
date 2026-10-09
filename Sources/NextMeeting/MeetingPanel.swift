@@ -2,14 +2,9 @@ import SwiftUI
 import AppKit
 
 private enum PanelStyle {
-    static let accent = Color(nsColor: NSColor(name: nil) { appearance in
-        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            ? NSColor(red: 0.30, green: 0.62, blue: 1, alpha: 1)
-            : NSColor(red: 0.0, green: 0.42, blue: 0.88, alpha: 1)
-    })
+    static let accent = Color(nsColor: .controlAccentColor)
     // A thin neutral fill quiets the backdrop without adding another glass layer.
     static let card = Color(nsColor: .windowBackgroundColor).opacity(0.28)
-    static let rule = Color(nsColor: .separatorColor)
 }
 
 struct MeetingPanel: View {
@@ -29,22 +24,7 @@ struct MeetingPanel: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 30)) { context in
-            VStack(spacing: 0) {
-                header
-                Rectangle().fill(PanelStyle.rule).frame(height: 1)
-                Group {
-                    if showingSettings {
-                        settings
-                    } else if let meeting = selectedMeeting {
-                        meetingDetail(meeting, now: context.date)
-                    } else if store.access != .granted {
-                        connection
-                    } else {
-                        agenda(now: context.date)
-                    }
-                }
-                footer(now: context.date)
-            }
+            panel(now: context.date)
             .frame(width: 340, height: PanelLayout.height(meetingCount: store.meetings.count, access: store.access,
                                                        showingSettings: showingSettings, showingDetails: selectedMeeting != nil))
             // NSPopover supplies one native surface for the body and its arrow.
@@ -52,7 +32,6 @@ struct MeetingPanel: View {
             // another material or an opaque content background.
             .environment(\.backgroundMaterial, .regular)
             .foregroundStyle(.primary)
-            .tint(PanelStyle.accent)
             .preferredColorScheme(ProcessInfo.processInfo.arguments.contains("--light") ||
                                   Bundle.main.object(forInfoDictionaryKey: "NextMeetingPreviewAppearance") as? String == "light" ? .light : nil)
             .onChange(of: store.access) { _, access in
@@ -66,20 +45,49 @@ struct MeetingPanel: View {
         }
     }
 
+    @ViewBuilder
+    private func panel(now: Date) -> some View {
+        if showingSettings {
+            settings(now: now)
+        } else if let meeting = selectedMeeting {
+            meetingDetail(meeting, now: now)
+        } else {
+            VStack(spacing: 0) {
+                panelHeader
+                if store.access != .granted {
+                    connection
+                    footer(now: now)
+                } else {
+                    agenda(now: now)
+                }
+            }
+        }
+    }
+
+    private var panelHeader: some View {
+        VStack(spacing: 0) {
+            header
+            Divider()
+        }
+    }
+
     private var header: some View {
         HStack(spacing: 9) {
             if showingSettings || selectedMeeting != nil {
                 Button {
                     showingSettings = false
                     selectedMeeting = nil
-                } label: { Image(systemName: "chevron.left").font(.system(size: 13, weight: .semibold)) }
-                    .buttonStyle(IconButtonStyle()).help("Back to meetings")
+                } label: {
+                    Image(systemName: "chevron.left").font(.system(size: 13, weight: .semibold))
+                        .frame(width: 28, height: 28).contentShape(Rectangle())
+                }
+                    .buttonStyle(.borderless).foregroundStyle(.secondary).help("Back to meetings")
                     .accessibilityLabel("Back to meetings")
             }
             Text(showingSettings ? "Settings" : selectedMeeting != nil ? "Meeting" : "Next Meeting")
                 .font(.system(size: 14, weight: .semibold))
             if store.isDemo {
-                Text("PREVIEW").font(.system(size: 8, weight: .bold)).tracking(0.7)
+                Text("PREVIEW").font(.system(size: 10, weight: .semibold)).tracking(0.4)
                     .foregroundStyle(.secondary).padding(.horizontal, 6).padding(.vertical, 3)
                     .background(PanelStyle.card, in: Capsule())
             }
@@ -87,7 +95,8 @@ struct MeetingPanel: View {
             if !showingSettings {
                 Button { showingSettings = true; selectedMeeting = nil } label: {
                     Image(systemName: "gearshape").font(.system(size: 14))
-                }.buttonStyle(IconButtonStyle()).help("Settings").accessibilityLabel("Settings")
+                        .frame(width: 28, height: 28).contentShape(Rectangle())
+                }.buttonStyle(.borderless).foregroundStyle(.secondary).help("Settings").accessibilityLabel("Settings")
             }
             Menu {
                 Button("Refresh Calendars", systemImage: "arrow.clockwise") { store.refresh() }
@@ -95,9 +104,12 @@ struct MeetingPanel: View {
                 Button("Open Calendar", systemImage: "calendar") { openCalendarSelection() }
                 Divider()
                 Button("Quit Next Meeting") { NSApplication.shared.terminate(nil) }.keyboardShortcut("q")
-            } label: { Image(systemName: "ellipsis").font(.system(size: 15, weight: .semibold)) }
+            } label: {
+                Image(systemName: "ellipsis").font(.system(size: 15, weight: .semibold))
+                    .frame(width: 28, height: 28).contentShape(Rectangle())
+            }
                 .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-                .frame(width: 24, height: 26).help("More options").accessibilityLabel("More options")
+                .help("More options").accessibilityLabel("More options")
         }
         .padding(.horizontal, 16).frame(height: 45)
     }
@@ -108,7 +120,7 @@ struct MeetingPanel: View {
         return VStack(spacing: 0) {
             if let next {
                 featuredMeeting(next, now: now).padding(.horizontal, 16).padding(.vertical, 17)
-                Rectangle().fill(PanelStyle.rule).frame(height: 1).padding(.horizontal, 16)
+                Divider().padding(.horizontal, 16)
             } else {
                 emptyAgenda.padding(.horizontal, 24).frame(height: 150)
             }
@@ -122,7 +134,7 @@ struct MeetingPanel: View {
 
             if meetings.isEmpty {
                 VStack(spacing: 12) {
-                    Rectangle().fill(PanelStyle.rule).frame(height: 1)
+                    Divider()
                     HStack(spacing: 7) {
                         Image(systemName: "checkmark.circle").foregroundStyle(PanelStyle.accent)
                         Text(store.calendars.isEmpty ? "Add an account to Apple Calendar." :
@@ -131,21 +143,25 @@ struct MeetingPanel: View {
                             .foregroundStyle(.secondary)
                         Spacer()
                     }.font(.system(size: 12))
-                    Button(store.calendars.isEmpty ? "Add calendar account" : "Choose calendars") {
+                    Button {
                         if store.calendars.isEmpty { AppActions.openCalendarAccounts() }
                         else { showingSettings = true }
-                    }.buttonStyle(QuietButtonStyle())
-                }.padding(.horizontal, 22)
+                    } label: {
+                        Text(store.calendars.isEmpty ? "Add calendar account" : "Choose calendars")
+                            .frame(maxWidth: .infinity)
+                    }.modifier(PanelActionStyle())
+                }.padding(.horizontal, 20)
                 Spacer(minLength: 0)
+                agendaFooter(now: now)
             } else {
-                ScrollView {
+                PanelScrollView(barEdges: .bottom) {
                     LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                         ForEach(grouped(meetings), id: \.date) { group in
                             Section {
                                 ForEach(group.meetings) { meeting in
                                     MeetingRow(meeting: meeting, now: now) { selectedMeeting = meeting }
                                     if meeting.id != group.meetings.last?.id {
-                                        Rectangle().fill(PanelStyle.rule).frame(height: 1).padding(.leading, 70)
+                                        Divider().padding(.leading, 102).padding(.trailing, 16)
                                     }
                                 }
                             } header: {
@@ -160,14 +176,24 @@ struct MeetingPanel: View {
                             }
                         }
                     }.padding(.bottom, 8)
+                } topBar: {
+                    EmptyView()
+                } bottomBar: {
+                    agendaFooter(now: now)
                 }.scrollIndicators(.automatic)
                     .background(PanelStyle.card)
             }
+        }.frame(maxHeight: .infinity)
+    }
+
+    private func agendaFooter(now: Date) -> some View {
+        VStack(spacing: 0) {
             if let error = store.errorMessage {
                 Text(error).font(.system(size: 11)).foregroundStyle(.orange)
                     .padding(.horizontal, 22).padding(.vertical, 7)
             }
-        }.frame(maxHeight: .infinity)
+            footer(now: now)
+        }
     }
 
     private func featuredMeeting(_ meeting: Meeting, now: Date) -> some View {
@@ -199,7 +225,7 @@ struct MeetingPanel: View {
                         Spacer()
                         Image(systemName: "arrow.up.right").font(.system(size: 10, weight: .semibold))
                     }
-                }.buttonStyle(JoinButtonStyle()).padding(.top, 15)
+                }.modifier(PanelActionStyle(prominent: true)).padding(.top, 16)
                     .help(store.isDemo ? "Joining is disabled in preview" : "Open meeting link")
                     .disabled(store.isDemo)
             } else {
@@ -255,7 +281,7 @@ struct MeetingPanel: View {
                     Spacer()
                     Image(systemName: "arrow.right")
                 }
-            }.buttonStyle(JoinButtonStyle()).disabled(store.isRefreshing)
+            }.modifier(PanelActionStyle(prominent: true)).disabled(store.isRefreshing)
             if store.access == .notDetermined {
                 Text("macOS will ask for calendar access.")
                     .font(.system(size: 10)).foregroundStyle(.tertiary).padding(.top, 10)
@@ -270,25 +296,27 @@ struct MeetingPanel: View {
         }.padding(.horizontal, 28).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
-    private var settings: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
+    private func settings(now: Date) -> some View {
+        PanelScrollView {
+            VStack(alignment: .leading, spacing: 24) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Calendars").font(.system(size: 17, weight: .semibold))
                     Text("Choose which calendars appear in Next Meeting.")
                         .font(.system(size: 12)).foregroundStyle(.secondary).lineSpacing(3)
                 }
                 if store.access != .granted {
-                    Button("Connect calendars") {
+                    Button {
                         showingSettings = false
-                    }.buttonStyle(QuietButtonStyle())
+                    } label: {
+                        Text("Connect calendars").frame(maxWidth: .infinity)
+                    }.modifier(PanelActionStyle())
                 } else if store.calendars.isEmpty {
                     Text("No calendars found. Add an account to Apple Calendar to get started.")
                         .font(.system(size: 12)).foregroundStyle(.secondary)
                 } else {
                     ForEach(calendarSources, id: \.self) { source in
                         VStack(alignment: .leading, spacing: 9) {
-                            Text(source.uppercased()).font(.system(size: 9, weight: .semibold))
+                            Text(source.uppercased()).font(.system(size: 10, weight: .semibold))
                                 .tracking(0.6).foregroundStyle(.secondary)
                             VStack(spacing: 0) {
                                 ForEach(store.calendars.filter { $0.source == source }) { calendar in
@@ -296,7 +324,7 @@ struct MeetingPanel: View {
                                                          set: { store.setCalendar(id: calendar.id, enabled: $0) })) {
                                         HStack(spacing: 8) {
                                             Circle().fill(Color(hex: calendar.colorHex)).frame(width: 7, height: 7)
-                                            Text(calendar.title).font(.system(size: 12)).lineLimit(2)
+                                            Text(calendar.title).font(.system(size: 13)).lineLimit(2)
                                         }
                                     }.toggleStyle(.checkbox).frame(maxWidth: .infinity, alignment: .leading).padding(12)
                                     if calendar.id != store.calendars.filter({ $0.source == source }).last?.id {
@@ -313,17 +341,21 @@ struct MeetingPanel: View {
                         Spacer()
                         Image(systemName: "arrow.up.right").font(.system(size: 10))
                     }
-                }.buttonStyle(QuietButtonStyle())
+                }.modifier(PanelActionStyle())
 
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Preferences").font(.system(size: 15, weight: .semibold))
                     VStack(spacing: 0) {
-                        Toggle("Show meeting title in menu bar", isOn: $preferences.showMeetingTitle)
-                            .toggleStyle(.switch).controlSize(.mini).font(.system(size: 12)).padding(12)
+                        Toggle(isOn: $preferences.showMeetingTitle) {
+                            Text("Show meeting title in menu bar").frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                            .toggleStyle(.switch).controlSize(.small).font(.system(size: 13)).padding(12)
                         Divider().padding(.horizontal, 12)
-                        Toggle("Open at login", isOn: Binding(get: { preferences.launchesAtLogin },
-                                                             set: { preferences.setLaunchAtLogin($0) }))
-                            .toggleStyle(.switch).controlSize(.mini).font(.system(size: 12)).padding(12)
+                        Toggle(isOn: Binding(get: { preferences.launchesAtLogin },
+                                             set: { preferences.setLaunchAtLogin($0) })) {
+                            Text("Open at login").frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                            .toggleStyle(.switch).controlSize(.small).font(.system(size: 13)).padding(12)
                             .disabled(store.isDemo)
                     }.background(PanelStyle.card, in: RoundedRectangle(cornerRadius: 12))
                     if let error = preferences.loginError {
@@ -337,33 +369,47 @@ struct MeetingPanel: View {
                     Text("All-day events and declined invitations are hidden.")
                         .font(.system(size: 11)).foregroundStyle(.secondary).lineSpacing(3)
                 }
-            }.padding(22)
+            }.padding(20)
+        } topBar: {
+            panelHeader
+        } bottomBar: {
+            footer(now: now)
         }.frame(maxHeight: .infinity)
     }
 
     private func meetingDetail(_ meeting: Meeting, now: Date) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(MeetingLogic.statusText(for: meeting, now: now).uppercased())
-                        .font(.system(size: 10, weight: .semibold)).tracking(0.8).foregroundStyle(PanelStyle.accent)
-                    Text(meeting.title).font(.system(size: 21, weight: .medium))
-                        .fixedSize(horizontal: false, vertical: true).padding(.top, 8).padding(.bottom, 16)
-                    VStack(alignment: .leading, spacing: 12) {
-                        detailLine("calendar", title: meeting.startDate.formatted(.dateTime.weekday(.wide).month(.wide).day()),
-                                   subtitle: timeRange(meeting))
-                        detailLine("circle.fill", title: meeting.calendarDisplayTitle, subtitle: "", color: Color(hex: meeting.colorHex))
-                        if let location = meeting.location, !location.isEmpty {
-                            detailLine("mappin", title: MeetingLogic.joinURL(from: [location]) != nil ? "Online meeting" : location, subtitle: "Location")
-                        }
-                        if let url = meeting.joinURL {
-                            detailLine("video", title: videoProvider(url), subtitle: "")
-                        }
-                    }.padding(14).frame(maxWidth: .infinity, alignment: .leading)
-                        .background(PanelStyle.card, in: RoundedRectangle(cornerRadius: 15))
-                    attendeesSection(AttendeeLogic.alphabeticallySorted(meeting.attendees)).padding(.top, 16).padding(.bottom, 16)
-                }
-            }.frame(maxHeight: .infinity)
+        PanelScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(MeetingLogic.statusText(for: meeting, now: now).uppercased())
+                    .font(.system(size: 10, weight: .semibold)).tracking(0.8).foregroundStyle(PanelStyle.accent)
+                Text(meeting.title).font(.system(size: 21, weight: .medium))
+                    .fixedSize(horizontal: false, vertical: true).padding(.top, 8).padding(.bottom, 16)
+                VStack(alignment: .leading, spacing: 12) {
+                    detailLine("calendar", title: meeting.startDate.formatted(.dateTime.weekday(.wide).month(.wide).day()),
+                               subtitle: timeRange(meeting))
+                    detailLine("circle.fill", title: meeting.calendarDisplayTitle, subtitle: "", color: Color(hex: meeting.colorHex))
+                    if let location = meeting.location, !location.isEmpty {
+                        detailLine("mappin", title: MeetingLogic.joinURL(from: [location]) != nil ? "Online meeting" : location, subtitle: "Location")
+                    }
+                    if let url = meeting.joinURL {
+                        detailLine("video", title: videoProvider(url), subtitle: "")
+                    }
+                }.padding(14).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(PanelStyle.card, in: RoundedRectangle(cornerRadius: 15))
+                attendeesSection(AttendeeLogic.alphabeticallySorted(meeting.attendees)).padding(.top, 16).padding(.bottom, 16)
+            }.padding(.horizontal, 20).padding(.top, 20)
+        } topBar: {
+            panelHeader
+        } bottomBar: {
+            VStack(spacing: 0) {
+                detailActions(meeting)
+                footer(now: now)
+            }
+        }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    }
+
+    private func detailActions(_ meeting: Meeting) -> some View {
+        VStack(spacing: 12) {
             if let url = meeting.joinURL {
                 Button { if !store.isDemo { Task { await AppActions.joinMeeting(url) } } } label: {
                     HStack {
@@ -372,7 +418,7 @@ struct MeetingPanel: View {
                         Spacer()
                         Image(systemName: "arrow.up.right")
                     }
-                }.buttonStyle(JoinButtonStyle()).disabled(store.isDemo)
+                }.modifier(PanelActionStyle(prominent: true)).disabled(store.isDemo)
             }
             Button { openCalendarSelection(meeting) } label: {
                 HStack {
@@ -381,9 +427,9 @@ struct MeetingPanel: View {
                     Spacer()
                     Image(systemName: "arrow.up.right").font(.system(size: 10))
                 }
-            }.buttonStyle(QuietButtonStyle()).padding(.top, 10).disabled(store.isDemo)
+            }.modifier(PanelActionStyle()).disabled(store.isDemo)
                 .help("Select this meeting in Apple Calendar")
-        }.padding(20).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        }.padding(.horizontal, 20).padding(.top, 12).padding(.bottom, 20).frame(maxWidth: .infinity)
     }
 
     private func attendeesSection(_ attendees: [Attendee]) -> some View {
@@ -402,7 +448,7 @@ struct MeetingPanel: View {
                     ForEach(attendees) { attendee in
                         AttendeeRow(attendee: attendee)
                         if attendee.id != attendees.last?.id {
-                            Rectangle().fill(PanelStyle.rule).frame(height: 1).padding(.horizontal, 12)
+                            Divider().padding(.horizontal, 12)
                         }
                     }
                 }.background(PanelStyle.card, in: RoundedRectangle(cornerRadius: 12))
@@ -446,7 +492,7 @@ struct MeetingPanel: View {
 
     private func footer(now: Date) -> some View {
         VStack(spacing: 0) {
-            Rectangle().fill(PanelStyle.rule).frame(height: 1)
+            Divider()
             if let error = navigation.calendarOpenError {
                 Text(error).font(.system(size: 11)).foregroundStyle(.orange)
                     .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.top, 10)
@@ -460,8 +506,9 @@ struct MeetingPanel: View {
                     HStack(spacing: 4) {
                         Text("Calendar")
                         Image(systemName: "arrow.up.right").font(.system(size: 8, weight: .semibold))
-                    }.font(.system(size: 10, weight: .medium))
-                }.buttonStyle(.plain).foregroundStyle(.secondary).disabled(store.isDemo)
+                    }.font(.system(size: 11, weight: .medium))
+                        .frame(minHeight: 28).contentShape(Rectangle())
+                }.buttonStyle(.borderless).foregroundStyle(.secondary).disabled(store.isDemo)
                     .help("Show the selected or next meeting in Apple Calendar")
             }.padding(.horizontal, 16).frame(height: 40)
         }
@@ -482,6 +529,46 @@ struct MeetingPanel: View {
     private func grouped(_ meetings: [Meeting]) -> [(date: Date, meetings: [Meeting])] {
         let groups = Dictionary(grouping: meetings) { Calendar.current.startOfDay(for: $0.startDate) }
         return groups.keys.sorted().map { (date: $0, meetings: groups[$0]!) }
+    }
+}
+
+/// Register overlapping bars so macOS owns the scroll edge effect and accessibility.
+private struct PanelScrollView<Content: View, TopBar: View, BottomBar: View>: View {
+    let barEdges: VerticalEdge.Set
+    let content: Content
+    let topBar: TopBar
+    let bottomBar: BottomBar
+
+    init(barEdges: VerticalEdge.Set = [.top, .bottom],
+         @ViewBuilder content: () -> Content,
+         @ViewBuilder topBar: () -> TopBar,
+         @ViewBuilder bottomBar: () -> BottomBar) {
+        self.barEdges = barEdges
+        self.content = content()
+        self.topBar = topBar()
+        self.bottomBar = bottomBar()
+    }
+
+    @ViewBuilder
+    var body: some View {
+        if #available(macOS 26.0, *) {
+            if barEdges.contains(.top) {
+                ScrollView { content }
+                    .safeAreaBar(edge: .top, spacing: 0) { topBar }
+                    .safeAreaBar(edge: .bottom, spacing: 0) { bottomBar }
+                    .scrollEdgeEffectStyle(.automatic, for: .vertical)
+            } else {
+                ScrollView { content }
+                    .safeAreaBar(edge: .bottom, spacing: 0) { bottomBar }
+                    .scrollEdgeEffectStyle(.automatic, for: .bottom)
+            }
+        } else {
+            VStack(spacing: 0) {
+                if barEdges.contains(.top) { topBar }
+                ScrollView { content }
+                bottomBar
+            }
+        }
     }
 }
 
@@ -547,12 +634,12 @@ private struct MeetingRow: View {
                     Text(meeting.startDate.formatted(date: .omitted, time: .shortened))
                         .font(.system(size: 11, weight: .medium)).monospacedDigit()
                     Text("\(max(1, Int(meeting.endDate.timeIntervalSince(meeting.startDate) / 60))) min")
-                        .font(.system(size: 9)).foregroundStyle(.secondary)
+                        .font(.system(size: 10)).foregroundStyle(.secondary)
                 }.frame(width: 58, alignment: .trailing)
                 RoundedRectangle(cornerRadius: 2).fill(Color(hex: meeting.colorHex))
                     .frame(width: 4, height: 31)
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(meeting.title).font(.system(size: 12, weight: .medium)).lineLimit(2)
+                    Text(meeting.title).font(.system(size: 13, weight: .medium)).lineLimit(2)
                         .multilineTextAlignment(.leading)
                     HStack(spacing: 4) {
                         Text(meeting.calendarDisplayTitle).lineLimit(1)
@@ -572,30 +659,24 @@ private struct MeetingRow: View {
     }
 }
 
-private struct JoinButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(PanelStyle.accent)
-            .padding(.horizontal, 13).padding(.vertical, 11)
-            .background(PanelStyle.accent.opacity(configuration.isPressed ? 0.20 : 0.12), in: RoundedRectangle(cornerRadius: 10))
-            .contentShape(RoundedRectangle(cornerRadius: 10))
-    }
-}
+/// Use native control states and appearance adaptation on every supported macOS.
+private struct PanelActionStyle: ViewModifier {
+    var prominent = false
 
-private struct QuietButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.system(size: 11, weight: .medium))
-            .foregroundStyle(.secondary)
-            .padding(11).frame(maxWidth: .infinity)
-            .background(Color.primary.opacity(configuration.isPressed ? 0.09 : 0.045), in: RoundedRectangle(cornerRadius: 9))
-    }
-}
-
-private struct IconButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label.foregroundStyle(.secondary).frame(width: 27, height: 27)
-            .background(Color.primary.opacity(configuration.isPressed ? 0.09 : 0), in: RoundedRectangle(cornerRadius: 7))
-            .contentShape(Rectangle())
+    func body(content: Content) -> some View {
+        Group {
+            if #available(macOS 26.0, *) {
+                if prominent {
+                    content.buttonStyle(.glassProminent).buttonSizing(.flexible)
+                } else {
+                    content.buttonStyle(.glass).buttonSizing(.flexible)
+                }
+            } else if prominent {
+                content.buttonStyle(.borderedProminent)
+            } else {
+                content.buttonStyle(.bordered)
+            }
+        }.font(.system(size: 13, weight: .medium)).controlSize(.large).frame(maxWidth: .infinity)
     }
 }
 
