@@ -12,11 +12,17 @@ jobs:
   build-and-test:
     runs-on: macos-15
     timeout-minutes: 15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Check toolchain
+        run: |
+          xcrun swiftc --version
+          xcrun --sdk macosx --show-sdk-version
       - name: Build
         run: scripts/build.sh
       - name: Test
