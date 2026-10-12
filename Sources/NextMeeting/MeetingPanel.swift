@@ -172,7 +172,7 @@ struct MeetingPanel: View {
                                     Text(group.date.formatted(.dateTime.month(.abbreviated).day()))
                                         .font(.system(size: 10)).foregroundStyle(.secondary)
                                 }.padding(.horizontal, 16).padding(.vertical, 8)
-                                    .background(PanelMaterial(material: .headerView).allowsHitTesting(false))
+                                    .background(.ultraThinMaterial)
                             }
                         }
                     }.padding(.bottom, 8)
@@ -728,20 +728,4 @@ private func videoProvider(_ url: URL) -> String {
     if host.contains("teams") { return "Microsoft Teams" }
     if host.contains("webex") { return "Webex" }
     return host
-}
-
-/// Protect pinned headers from scrolling content within the native popover.
-private struct PanelMaterial: NSViewRepresentable {
-    let material: NSVisualEffectView.Material
-
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = material
-        view.blendingMode = .withinWindow
-        return view
-    }
-
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
-        nsView.material = material
-    }
 }
