@@ -29,3 +29,8 @@ jobs:
         run: scripts/test.sh
       - name: Check build identifiers
         run: scripts/test-build-identifier.sh
+      - name: Check preview packaging
+        run: |
+          scripts/test-build-preview.sh
+          scripts/build-preview.sh light
+          scripts/build-preview.sh agenda

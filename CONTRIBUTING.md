@@ -15,7 +15,7 @@ The build creates `build/Next Meeting.app` with its icon, calendar permission me
 
 Local builds show `Version <version> (local <identifier>)` in the menu-bar right-click menu. The identifier covers the source, bundle resources and configuration, build scripts, compiler, SDK version and build, and compiler flags including architecture. Moving the checkout does not change it. Run `./scripts/test-build-identifier.sh` to check this behavior. To prepare an unlabeled release bundle, run `./scripts/build.sh --release` before Developer ID signing and release packaging. The release packager rejects bundles labeled as local builds.
 
-`scripts/test.sh` reports separate results for meeting logic, Apple Calendar event links, and meeting app routing. The checks use synthetic data and injected openers, without reading personal calendars, launching conference apps, or joining meetings.
+`scripts/test.sh` reports separate results for launch modes, meeting logic, Apple Calendar event links, and meeting app routing. The checks use synthetic data and injected openers, without reading personal calendars, launching conference apps, or joining meetings. Run `scripts/test-build-preview.sh` to check preview packaging and switching scenarios.
 
 ## Preview the interface
 
@@ -23,12 +23,12 @@ Build a separate sample app after building the main app:
 
 ```sh
 ./scripts/build-preview.sh agenda
-open "build/qa/NextMeeting-agenda.app"
+open "build/qa/NextMeetingPreview.app"
 ```
 
-The sample app has its own bundle identifier and always uses labeled sample data. Quit an open sample app before rebuilding it so the next launch uses the new executable.
+The sample app has one stable bundle identifier and always uses labeled sample data. All scenarios replace the same `build/qa/NextMeetingPreview.app`; quit an open sample app before rebuilding it so the next launch uses the new executable. Previews use a standard window and never create a menu bar item or an additional menu bar toggle in System Settings. Closing the preview window quits the preview app.
 
-The other states are `empty`, `denied`, `light`, and `popover`. For example, `./scripts/build-preview.sh light` creates `build/qa/NextMeeting-light.app`. In the popover preview, click **Open sample popover** to inspect the native arrow and panel surface together.
+The other states are `empty`, `denied`, `light`, and `popover`. For example, `./scripts/build-preview.sh light` replaces the same preview app with the light scenario. In the popover preview, click **Open sample popover** to inspect the native arrow and panel surface together. The popover is anchored to that window's button rather than the menu bar.
 
 Render dark, light, and meeting-detail PNGs without opening the app or reading calendars:
 
@@ -49,7 +49,25 @@ open "build/Next Meeting.app"
 
 `--verify-calendars` reports permission status, counts, and the last verification time, without event details. Exit code 0 means the launched app refreshed successfully within the last three minutes. The diagnostic reads a saved summary because macOS can attribute calendar access differently to a terminal process.
 
-`--inspect` opens a standard window with real calendar data for local diagnostics. Use sample previews for shared screenshots and issue reports.
+`--inspect` opens a standard window with real calendar data for local diagnostics. `--preview` and `--demo` open a window with sample data. None of these modes creates a menu bar item; launch normally to check the actual menu bar. Use sample previews for shared screenshots and issue reports.
+
+## Remove old preview entries from macOS
+
+Older preview and screenshot builds created their own menu bar items, which macOS can keep listing in **System Settings → Menu Bar** after the apps quit. Updating the source prevents new preview entries but does not erase macOS's existing records.
+
+On the affected Mac:
+
+1. Quit the obsolete preview or screenshot apps. Keep the real **Next Meeting** app.
+2. Locate each obsolete `.app` bundle, for example `build/qa/NextMeeting-agenda.app`, `NextMeeting-capture-dark.app`, or an old `NextMeetingPreview.app`. For each exact path, unregister it before moving it to the Trash:
+
+   ```sh
+   /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -u "/full/path/to/NextMeeting-agenda.app"
+   ```
+
+3. Move only those obsolete copies to the Trash. Leave `/Applications/Next Meeting.app` and the current `build/Next Meeting.app` in place.
+4. Reopen System Settings. If old rows remain cached, log out and back in, then check again.
+
+`lsregister -u` unregisters that bundle path from LaunchServices; it does not guarantee immediate removal of cached Menu Bar rows. Avoid resetting all of LaunchServices or Control Center, which would affect other apps and preferences. If an old entry persists, include its name and your macOS version in the issue report.
 
 ## Submit a change
 

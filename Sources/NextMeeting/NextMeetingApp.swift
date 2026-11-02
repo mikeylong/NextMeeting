@@ -37,7 +37,7 @@ enum NextMeetingApp {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
-    private var statusItem: NSStatusItem!
+    private var statusItem: NSStatusItem?
     private let popover = NSPopover()
     private var previewWindow: NSWindow?
     private var previewAnchor: NSButton?
@@ -49,16 +49,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let arguments = ProcessInfo.processInfo.arguments
-        let isPreview = arguments.contains("--preview") || Bundle.main.object(forInfoDictionaryKey: "NextMeetingPreview") as? Bool == true
-        let isInspection = arguments.contains("--inspect") || Bundle.main.object(forInfoDictionaryKey: "NextMeetingInspection") as? Bool == true
-        let demo = arguments.contains("--demo") || isPreview
+        let mode = AppLaunchMode(arguments: arguments, info: Bundle.main.infoDictionary ?? [:])
+        let isPreview = mode == .preview
+        let isInspection = mode == .inspection
         let previewStateName = Bundle.main.object(forInfoDictionaryKey: "NextMeetingPreviewState") as? String
         let isPopoverPreview = isPreview && (arguments.contains("--preview-popover") || previewStateName == "popover")
         let previewState: CalendarPreviewState? = isPreview
             ? (arguments.contains("--preview-empty") || previewStateName == "empty" ? .empty
                : arguments.contains("--preview-denied") || previewStateName == "denied" ? .denied : nil)
             : nil
-        store = CalendarStore(demo: demo, previewState: previewState)
+        store = CalendarStore(demo: isPreview, previewState: previewState)
 
         let root = MeetingPanel().environmentObject(store).environmentObject(preferences).environmentObject(navigation)
         popover.contentViewController = NSHostingController(rootView: root)
@@ -67,31 +67,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         popover.animates = true
         popover.delegate = self
 
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "calendar.badge.clock", accessibilityDescription: "Next Meeting")
-            button.image?.size = NSSize(width: 18, height: 18)
-            button.image?.isTemplate = true
-            button.imagePosition = .imageLeading
-            button.target = self
-            button.action = #selector(togglePopover)
-            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        if mode.showsMenuBarItem {
+            statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+            if let button = statusItem?.button {
+                button.image = NSImage(systemSymbolName: "calendar.badge.clock", accessibilityDescription: "Next Meeting")
+                button.image?.size = NSSize(width: 18, height: 18)
+                button.image?.isTemplate = true
+                button.imagePosition = .imageLeading
+                button.target = self
+                button.action = #selector(togglePopover)
+                button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+            }
+
+            store.$meetings.combineLatest(store.$access, preferences.$showMeetingTitle)
+                .receive(on: RunLoop.main)
+                .sink { [weak self] _ in self?.updateStatusItem() }
+                .store(in: &subscriptions)
+            timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+                Task { @MainActor in self?.updateStatusItem() }
+            }
+            updateStatusItem()
         }
 
-        store.$meetings.combineLatest(store.$access, preferences.$showMeetingTitle)
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.updateStatusItem() }
-            .store(in: &subscriptions)
         Publishers.CombineLatest4(store.$meetings, store.$access, navigation.$showingSettings, navigation.$selectedMeeting)
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.updatePanelSize() }
             .store(in: &subscriptions)
-        timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.updateStatusItem() }
-        }
-        updateStatusItem()
-
         if isPreview || isInspection {
+            // Diagnostic windows have a Dock icon with a Quit action,
+            // but never leave another entry in System Settings > Menu Bar.
+            NSApplication.shared.setActivationPolicy(.regular)
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: isPopoverPreview ? 380 : 340,
                                                       height: isPopoverPreview ? 120 : 520),
                                   styleMask: isPopoverPreview ? [.titled, .closable] : [.titled, .closable, .fullSizeContentView],
@@ -143,6 +148,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         return true
     }
 
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        statusItem == nil
+    }
+
     @objc private func togglePopover(_ sender: NSStatusBarButton) {
         if NSApp.currentEvent?.type == .rightMouseUp {
             let menu = NSMenu()
@@ -152,9 +161,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             menu.addItem(withTitle: AppVersion.menuTitle, action: nil, keyEquivalent: "").isEnabled = false
             menu.addItem(withTitle: "Quit Next Meeting", action: #selector(quit), keyEquivalent: "q")
             for item in menu.items { item.target = self }
-            statusItem.menu = menu
-            statusItem.button?.performClick(nil)
-            statusItem.menu = nil
+            statusItem?.menu = menu
+            statusItem?.button?.performClick(nil)
+            statusItem?.menu = nil
         } else if popover.isShown { popover.performClose(nil) }
         else { showPopover() }
     }
@@ -172,7 +181,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
 
     private func showPopover() {
-        guard let button = statusItem.button else { return }
+        guard let button = statusItem?.button else { return }
         navigation.reset()
         store.refresh()
         preferences.updateLoginStatus()
