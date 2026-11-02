@@ -1,13 +1,9 @@
-# Next Meeting 1.0.9
+# Next Meeting 1.0.10
 
-Meeting details and Settings now use native scroll edge effects above and below their content on macOS 26 and later. The agenda uses the same effect above its footer, while pinned day headers stay readable.
+Preview, demo, and inspection windows no longer add separate menu bar items. Only a normal Next Meeting launch creates the menu bar item. Preview scenarios now reuse one app bundle and identifier instead of creating a separate app for each scenario.
 
-Native action buttons, aligned dividers, larger small labels, and consistent spacing make the panel easier to read and use. Preference switches line up, and toolbar controls have larger click targets.
+Existing preview entries already cached by macOS are not automatically removed by this update. Quit and remove obsolete preview copies, keeping the real Next Meeting app. See the [cleanup instructions](https://github.com/mikeylong/NextMeeting/blob/main/CONTRIBUTING.md#remove-old-preview-entries-from-macos) for unregistering old copies and refreshing System Settings.
 
-Controls and scroll edges follow light and dark appearance, Increase Contrast, and Reduce Transparency. Earlier supported macOS versions use standard buttons and scrolling.
+Calendar selections, preferences, calendar access, and meeting app routing carry over from the previous version.
 
-Calendar selections, preferences, calendar access, attendee order, and meeting app routing carry over from the previous version.
-
-Requires an Apple silicon Mac running macOS 14 or later. The download includes the app and a SHA-256 checksum.
-
-Next Meeting is signed with Developer ID and is not notarized. macOS may block it after download. [Apple’s opening instructions](https://support.apple.com/en-us/102445) explain the approval available in Privacy & Security.
+Requires an Apple silicon Mac running macOS 14 or later.
