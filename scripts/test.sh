@@ -7,6 +7,14 @@ SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
 ARCH="$(uname -m)"
 mkdir -p "$BUILD_DIR/module-cache"
 
+xcrun swiftc -parse-as-library -swift-version 6 \
+    -module-cache-path "$BUILD_DIR/module-cache" \
+    -target "$ARCH-apple-macosx14.0" -sdk "$SDK_PATH" \
+    "$PROJECT_DIR/Sources/NextMeeting/AppLaunchMode.swift" \
+    "$PROJECT_DIR/Tests/AppLaunchModeTests.swift" \
+    -o "$BUILD_DIR/AppLaunchModeTests"
+"$BUILD_DIR/AppLaunchModeTests"
+
 # Run the pure meeting logic without requesting calendar access or launching UI.
 xcrun swiftc -parse-as-library -swift-version 6 \
     -module-cache-path "$BUILD_DIR/module-cache" \
